@@ -43,7 +43,7 @@ print('Number of actions: ', env.action_space.n)
 # In[8]:
 
 
-from rl.dqn.dqn_agent import Agent
+from drl.dqn.dqn_agent import Agent
 
 agent = Agent(state_size=8, action_size=4, seed=0)
 

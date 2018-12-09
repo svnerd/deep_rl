@@ -2,7 +2,7 @@ import numpy as np
 import random, os
 from collections import namedtuple, deque
 
-from rl.dqn.model import QNetwork
+from drl.dqn.model import QNetwork
 
 import torch
 import torch.nn.functional as F
@@ -54,6 +54,7 @@ class Agent():
             if len(self.memory) > BATCH_SIZE:
                 experiences = self.memory.sample()
                 self.learn(experiences, GAMMA)
+                #self.double_dqn_learn(experiences, GAMMA)
 
     def act(self, state, eps=0.):
         """Returns actions for given state as per current policy.
@@ -75,6 +76,24 @@ class Agent():
         else:
             return random.choice(np.arange(self.action_size))
 
+    def double_dqn_learn(self, experiences, gamma):
+        states, actions, rewards, next_states, dones = experiences
+        # this is the double dqn part.
+        # use qlocal to pick the max action
+        max_indices = self.qnetwork_local.forward(next_states).max(dim=1)[1].unsqueeze(1)
+        max_targets = self.qnetwork_target.forward(next_states).gather(1, max_indices).unsqueeze(1)
+        # if done = 1, the terminal state doesn't have Q value.
+        Q_target = rewards + gamma * max_targets * (1-dones)
+        # this is the deep came in. it uses a deep NN to approximiate Q function.
+        Q_estimate = self.qnetwork_local.forward(states).gather(1, actions)
+
+        loss = F.mse_loss(Q_target, Q_estimate)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        # ------------------- update target network ------------------- #
+        self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)
+
     def learn(self, experiences, gamma):
         """Update value parameters using given batch of experience tuples.
 
@@ -84,16 +103,16 @@ class Agent():
             gamma (float): discount factor
         """
         states, actions, rewards, next_states, dones = experiences
-        ## TODO: compute and minimize the loss
-        "*** YOUR CODE HERE ***"
+
+        # this is the Q - learning part. i.e. find the action that maximize Q value.
         max_targets = self.qnetwork_target.forward(next_states).max(dim=1)[0].unsqueeze(1)
 
+        # if done = 1, the terminal state doesn't have Q value.
         Q_target = rewards + gamma * max_targets * (1-dones)
-        #print("Q_target", Q_target)
-        #print(actions)
+
+        # this is the deep came in. it uses a deep NN to approximiate Q function.
         Q_estimate = self.qnetwork_local.forward(states).gather(1, actions)
-        #self.expected_value(self.qnetwork_local.forward(states))
-        #print("Q_estimate", Q_estimate)
+
         loss = F.mse_loss(Q_target, Q_estimate)
         self.optimizer.zero_grad()
         loss.backward()

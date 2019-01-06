@@ -21,7 +21,7 @@ class RobotView:
         self.env = self.unity_env.step(action)[self.brain_name]
 
     def get_state_reward_done(self):
-        next_state = self.env.vector_observations[0]
+        state = self.env.vector_observations[0]
         reward = self.env.rewards[0]
         done = self.env.local_done[0]
-        return next_state, reward, done
+        return state, reward, done

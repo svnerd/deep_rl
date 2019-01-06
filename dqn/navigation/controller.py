@@ -10,9 +10,11 @@ class RobotController:
         self.view = RobotView()
         self.agent = NavigationBrainAgent(self.view.state_size, self.view.action_size)
         self.eps = SoftEpsilonDecay(1.0, 1e-3, 0.995)
+        self.dropout = SoftEpsilonDecay(0.5, 0.1, 0.995)
 
-    def train(self, train_target=100, episode_cnt=2000):
+    def train(self, train_target=13, episode_cnt=2000):
         eps = self.eps.eps
+        dropout = self.dropout.eps
         scores = []                        # list containing scores from each episode
         scores_window = deque(maxlen=100)  # last 100 scores
         for i in range(episode_cnt):
@@ -23,10 +25,12 @@ class RobotController:
                 action = self.agent.act(s, eps)
                 self.view.step(action)
                 next_s, r, done = self.view.get_state_reward_done()
-                self.agent.observe(s, action, r, next_s, done)
+                self.agent.observe(s, action, r, next_s, done, dropout)
                 score += r
                 if done:
                     break
+            eps = self.eps.decay()
+            dropout = self.dropout.decay()
             scores_window.append(score)
             scores.append(score)
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i, np.mean(scores_window)), end="")

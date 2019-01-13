@@ -1,6 +1,7 @@
 
-from drl.dqn.navigation.view import RobotView
-from drl.dqn.navigation.model import NavigationBrainAgent
+from dqn.navigation.view import RobotView
+from dqn.navigation.model import NavigationBrainAgent
+
 from collections import deque
 import numpy as np
 import torch

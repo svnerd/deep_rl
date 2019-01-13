@@ -4,7 +4,7 @@ from unityagents import UnityEnvironment
 
 class RobotView:
     def __init__(self):
-        self.unity_env = UnityEnvironment(file_name="Banana.app")
+        self.unity_env = UnityEnvironment(file_name="/home/seiya/projects/drl/dqn/navigation/Banana_Linux/Banana.x86_64")
         self.brain_name = self.unity_env.brain_names[0] # 0 is the default brain
         self.brain = self.unity_env.brains[self.brain_name]
         self.action_size = self.brain.vector_action_space_size

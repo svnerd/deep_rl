@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR=$(pwd)/../../..
+DIR=$(pwd)/../
 export PYTHONPATH=$DIR:$PYTHONPATH
 set -ex
-python -m dqn.gym.Deep_Q_Network
+python -m dqn.dqn_agent 

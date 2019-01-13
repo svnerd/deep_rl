@@ -10,7 +10,7 @@ EVERY_4_STEPS = 4
 LR = 5e-4
 TAU = 1e-1              # for soft update of target parameters
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+print(DEVICE)
 
 class NavigationBrainAgent():
     def __init__(self, state_size, action_size):

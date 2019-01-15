@@ -52,13 +52,10 @@ class BananaPolicy:
 
     def __learn(self, experiences):
         states, actions, rewards, next_states, dones = experiences
-        #next_state_estimate_tensor = self.target_network.forward(next_states)
-        #max_next_state_q = next_state_estimate_tensor.detach().max(1)[0].unsqueeze(1)
-        _, next_state_estimate = self.target_network.estimate(next_states)
-        max_next_state_q = np.amax(next_state_estimate, axis=1).reshape(-1, 1)
+        next_state_estimate_tensor = self.target_network.forward(next_states)
+        max_next_state_q = next_state_estimate_tensor.detach().max(1)[0].unsqueeze(1)
         # if next state is done state, don't count the rewards.
-        target_qs = float_to_device(rewards) +\
-                    self.discount_factor * max_next_state_q * (1-float_to_device(dones))
+        target_qs = float_to_device(rewards) + self.discount_factor * max_next_state_q * (1-float_to_device(dones))
         # use local to calculate expected Q
         estimate_qs_tensors = self.local_network.forward(states)
         estimate_qs_by_actions = estimate_qs_tensors.gather(1, long_to_device(actions))

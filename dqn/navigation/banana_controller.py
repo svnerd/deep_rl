@@ -5,7 +5,7 @@ from drl.util.eps_decay import SoftEpsilonDecay
 
 if __name__ == '__main__':
     env = BananaEnv()
-    policy = BananaPolicy(env, good_target=100)
+    policy = BananaPolicy(env, good_target=13)
     eps_handler = SoftEpsilonDecay(1.0, 1e-3, 0.995)
     eps = eps_handler.eps
     episode = 0

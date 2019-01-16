@@ -1,8 +1,10 @@
-from drl.dqn.navigation.banana_network import BananaNetwork, long_to_device, float_to_device
+from drl.dqn.navigation.banana_network import BananaNetwork
 from drl.util.replay_buffer import ExperienceMemory
+import drl.util.device as D
 import numpy as np
 import random
 from collections import deque
+
 
 EVERY_4_STEPS = 4
 
@@ -55,10 +57,10 @@ class BananaPolicy:
         next_state_estimate_tensor = self.target_network.forward(next_states)
         max_next_state_q = next_state_estimate_tensor.detach().max(1)[0].unsqueeze(1)
         # if next state is done state, don't count the rewards.
-        target_qs = float_to_device(rewards) + self.discount_factor * max_next_state_q * (1-float_to_device(dones))
+        target_qs = D.float_to_device(rewards) + self.discount_factor * max_next_state_q * (1-D.float_to_device(dones))
         # use local to calculate expected Q
         estimate_qs_tensors = self.local_network.forward(states)
-        estimate_qs_by_actions = estimate_qs_tensors.gather(1, long_to_device(actions))
+        estimate_qs_by_actions = estimate_qs_tensors.gather(1, D.long_to_device(actions))
         self.local_network.correct(estimate_qs_by_actions, (target_qs))
         self.target_network.manual_update_param(self.local_network.get_params())
 

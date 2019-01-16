@@ -1,31 +1,24 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import drl.util.device as D
 
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 LR = 5e-4
-
-def float_to_device(np_arr):
-    return torch.from_numpy(np_arr).float().to(DEVICE)
-
-def long_to_device(np_arr):
-    return torch.from_numpy(np_arr).long().to(DEVICE)
-
 
 class BananaNetwork:
     def __init__(self, state_size, action_size, need_optimizer=True, seed=58):
-        self.network = TorchNetwork(state_size, action_size, seed).to(DEVICE)
+        self.network = TorchNetwork(state_size, action_size, seed).to(D.DEVICE)
         if need_optimizer:
             self.optimizer = torch.optim.Adam(self.network.parameters(), lr=LR)
         else:
             self.optimizer = None
 
     def forward(self, states):
-        states_on_device = float_to_device(states)
+        states_on_device = D.float_to_device(states)
         return self.network.forward(states_on_device)
 
     def estimate(self, states):
-        states_on_device = float_to_device(states)
+        states_on_device = D.float_to_device(states)
         self.network.eval()
         with torch.no_grad():
             action_values = self.network.forward(states_on_device)

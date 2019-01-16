@@ -15,7 +15,7 @@ class PoleEnv():
         return
 
     def state_action_size(self):
-        return (self.env.observation_space, self.env.action_space)
+        return (int(self.env.observation_space.shape[0]), int(self.env.action_space.n))
 
     def response(self, action=None):
         if action is None:

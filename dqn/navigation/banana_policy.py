@@ -3,13 +3,12 @@ from drl.util.replay_buffer import ExperienceMemory
 import drl.util.device as D
 import numpy as np
 import random
-from collections import deque
 
 
 EVERY_4_STEPS = 4
 
 class BananaPolicy:
-    def __init__(self, env, good_target):
+    def __init__(self, env):
         self.env = env
         state_size, action_size = env.state_action_size()
         print("action, state size", action_size, state_size)
@@ -19,8 +18,6 @@ class BananaPolicy:
         self.memory = ExperienceMemory()
         self.steps = 0
         self.discount_factor = 0.99
-        self.scores_window = deque(maxlen=100)  # last 100 scores
-        self.good_target = good_target
 
     def decide(self, eps=0.0):
         _, _, state, _ = self.env.response()
@@ -39,18 +36,6 @@ class BananaPolicy:
             if experiences == None:
                 return
             self.__learn(experiences)
-
-    def score_tracking(self, episode, score):
-        self.scores_window.append(score)
-        mean_score = np.mean(self.scores_window)
-        print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score), end="")
-        if episode % 100 == 0:
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score))
-        if self.is_good():
-            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode, mean_score))
-
-    def is_good(self):
-        return np.mean(self.scores_window) >= self.good_target
 
     def __learn(self, experiences):
         states, actions, rewards, next_states, dones = experiences

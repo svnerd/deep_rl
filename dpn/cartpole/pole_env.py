@@ -7,10 +7,12 @@ class PoleEnv():
     def __init__(self):
         self.env = gym.make('CartPole-v0')
         self.env.seed(0)
-        self.response_buffer = Experience(prev_state=None, action=None, reward=None, state=self.reset(), done=False)
+        self.reset()
 
     def reset(self):
-        return self.env.reset()
+        state = self.env.reset()
+        self.response_buffer = Experience(prev_state=None, action=None, reward=None, state=state, done=False)
+        return
 
     def state_action_size(self):
         return (self.env.observation_space, self.env.action_space)

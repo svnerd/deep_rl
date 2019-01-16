@@ -2,20 +2,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import drl.util.device as D
-
+from torch.distributions import Categorical
 LR = 5e-4
 
 class PoleNetwork:
     def __init__(self, state_size, action_size, seed=6):
         self.network = TorchNetwork(state_size, action_size, seed)
-
-
-
-    def estimate(self, output_tensor):
-        pass
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=LR)
 
     def forward(self, state):
-        return self.network.forward(D.float_to_device(state))
+        probs = self.network.forward(D.float_to_device(state)).cpu()
+        cat_probs = Categorical(probs)
+        action = cat_probs.sample()
+        print("action", action)
+        print("action_item", action.item())
+        return action.item(), cat_probs.log_prob(action)
+
 
 
 class TorchNetwork(nn.Module):

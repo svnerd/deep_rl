@@ -1,6 +1,6 @@
 import gym
 from drl.util.replay_buffer import Experience
-
+from drl.util.matrix import to_2d
 
 
 class PoleEnv():
@@ -11,7 +11,8 @@ class PoleEnv():
 
     def reset(self):
         state = self.env.reset()
-        self.response_buffer = Experience(prev_state=None, action=None, reward=None, state=state, done=False)
+        self.response_buffer = Experience(prev_state=None, action=None, reward=None,
+                                          state=to_2d(state), done=False)
         return
 
     def state_action_size(self):
@@ -23,6 +24,6 @@ class PoleEnv():
         state, reward, done, _ = self.env.step(action)
         self.response_buffer = Experience(
             prev_state=self.response_buffer.state,
-            action=action, reward=reward, state=state, done=done
+            action=action, reward=reward, state=to_2d(state), done=done
         )
-        return self.response_buffers
+        return self.response_buffer

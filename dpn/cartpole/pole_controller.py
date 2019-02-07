@@ -7,8 +7,8 @@ if __name__ == '__main__':
     env = PoleEnv()
     env.reset()
     score_tracker = ScoreTracker(good_target=193, window_len=100)
-    #policy = PolePolicy(env)
-    policy = PolePPOPolicy(env)
+    policy = PolePolicy(env)
+    #policy = PolePPOPolicy(env)
     episode = 0
     score_per_episode = 0
     while True:
@@ -20,7 +20,7 @@ if __name__ == '__main__':
             score_per_episode = 0
             episode += 1
             env.reset()
-        policy.update(experience, prob)
+        policy.update(experience, log_prob)
 
         if score_tracker.is_good():
             break

@@ -31,7 +31,10 @@ class PolePPOPolicy:
                 for old_prob, s, r in zip(*[self.old_prob_buffer, self.state_buffer, self.reward_buffer]):
                     _, updated_prob, _ = self.network.forward(s.state, s.action)
                     g = updated_prob / old_prob
-                    surrogate = torch.min(g * r, g.clamp(min=1-eps, max=1 + eps) * r)
+                    #surrogate = torch.min(g * r, g.clamp(min=1-eps, max=1 + eps) * r)
+                    entropy = -(updated_prob*torch.log(old_prob+1.e-10)+
+                                (1.0-updated_prob)*torch.log(1.0-old_prob+1.e-10))
+                    surrogate = g * r - 0.01 * entropy
                     policy_loss.append(-surrogate)
                 self.network.correct(policy_loss)
             self.__clean_buffer()

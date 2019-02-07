@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import drl.util.device as D
 from torch.distributions import Categorical
-LR = 1e-3
+LR = 4e-4
 
 class PoleNetwork:
     def __init__(self, state_size, action_size, seed=6):
@@ -33,6 +33,7 @@ class PoleNetwork:
 
     def get_params(self):
         return self.network.parameters()
+
 
 class TorchNetwork(nn.Module):
     def __init__(self, state_size, action_size, seed):

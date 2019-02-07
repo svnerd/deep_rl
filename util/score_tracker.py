@@ -15,6 +15,8 @@ class ScoreTracker:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score))
         if self.is_good():
             print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode, mean_score))
+        if episode > 2000:
+            exit(0)
 
     def is_good(self):
         return np.mean(self.scores_window) >= self.good_target

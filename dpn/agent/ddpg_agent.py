@@ -3,6 +3,7 @@ from drl.framework.buffer import ExperienceMemory
 from drl.util.device import to_np, tensor_float
 import torch.nn.functional as F
 import numpy as np
+import torch
 
 class DDPGAgent(Agent):
     def __init__(self, config):
@@ -10,7 +11,7 @@ class DDPGAgent(Agent):
         self.config = config
         self.states = config.env_driver.reset()
         self.memory = ExperienceMemory(int(1e5))
-        self.batch_size = 64
+        self.batch_size = 128
         self.episode_reward = 0
         self.episode_cnt = 0
 
@@ -24,7 +25,9 @@ class DDPGAgent(Agent):
     def step(self):
         config = self.config
         env_driver = config.env_driver
-        actions = to_np(config.network.actor(self.states))
+        config.network.eval()
+        with torch.no_grad():
+            actions = to_np(config.network.actor(self.states))
         actions += np.array([n.sample() for n in config.noise])
         next_states, rs, dones, _ = env_driver.step(actions)
         if dones[0]:
@@ -48,6 +51,8 @@ class DDPGAgent(Agent):
         # doesn't need derivative
         q_target.detach()
         q = config.network.critic(states, actions)
+        config.network.train()
+
         critic_loss = F.mse_loss(q, q_target)
         config.critic_optimizer.zero_grad()
         critic_loss.backward()

@@ -5,6 +5,8 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 
+# note should only have 1 active tensor(requires derivative) in the loss.
+
 class DDPGAgent(Agent):
     def __init__(self, config):
         super(DDPGAgent, self).__init__()
@@ -59,6 +61,7 @@ class DDPGAgent(Agent):
         config.critic_optimizer.step()
 
         a = config.network.actor(states)
+        states = tensor_float(states).detach()
         actor_loss = -config.network.critic(states, a).mean()
         config.actor_optimizer.zero_grad()
         actor_loss.backward()

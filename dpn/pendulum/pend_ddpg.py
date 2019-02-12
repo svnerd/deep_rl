@@ -6,6 +6,7 @@ from drl.framework.network import FCNet, PassthroughNet, FCActInjected1Net
 from drl.dpn.agent.ddpg_agent import DDPGAgent
 from drl.util.score_tracker import ScoreTracker
 from drl.util.noise import OUNoise
+from drl.util.device import DEVICE
 import torch
 
 def make_ddpg_net(config):
@@ -16,7 +17,7 @@ def make_ddpg_net(config):
         shared_net=PassthroughNet(dim=obs_dim),
         actor_net=FCNet(input_dim=obs_dim, hidden_units=[400, 300]),
         critic_net=FCActInjected1Net(input_dim=obs_dim, action_dim=action_dim, hidden_units=[400, 300])
-    )
+    ).to(DEVICE)
 
 if __name__ == '__main__':
     config = DDPGConfig()

@@ -31,6 +31,7 @@ class DDPGAgent(Agent):
         with torch.no_grad():
             actions = to_np(config.network.actor(self.states))
         actions += np.array([n.sample() for n in config.noise])
+        actions = np.clip(actions, -1, 1)
         next_states, rs, dones, _ = env_driver.step(actions)
         if dones[0]:
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)

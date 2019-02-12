@@ -52,7 +52,7 @@ class DDPGAgent(Agent):
         q_next = config.target_network.critic(next_states, a_next)
         q_target = tensor_float(rewards) + config.discount * tensor_float(1 - dones) * q_next
         # doesn't need derivative
-        q_target.detach()
+        #q_target.detach()
         q = config.network.critic(states, actions)
         config.network.train()
 
@@ -62,7 +62,7 @@ class DDPGAgent(Agent):
         config.critic_optimizer.step()
 
         a = config.network.actor(states)
-        states = tensor_float(states).detach()
+        #states = tensor_float(states).detach()
         actor_loss = -config.network.critic(states, a).mean()
         config.actor_optimizer.zero_grad()
         actor_loss.backward()

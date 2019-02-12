@@ -34,8 +34,8 @@ if __name__ == '__main__':
     obs_dim = config.env_driver.obs_dim
     config.network = make_ddpg_net(config)
     config.optimizer = None
-    config.actor_optimizer = torch.optim.Adam(params=config.network.get_actor_params(), lr=1e-3)
-    config.critic_optimizer = torch.optim.Adam(params=config.network.get_critic_params(), lr=1e-2)
+    config.actor_optimizer = torch.optim.Adam(params=config.network.get_actor_params(), lr=1e-4)
+    config.critic_optimizer = torch.optim.Adam(params=config.network.get_critic_params(), lr=1e-3)
     config.target_network = make_ddpg_net(config)
     config.target_network.load_state_dict(config.network.state_dict())
     config.score_tracker = ScoreTracker(good_target=100, window_len=100)

@@ -48,14 +48,21 @@ class DDPGAgent(Agent):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
+    def act(self, state, add_noise=True):
+        """Returns actions for given state as per current policy."""
+        state = torch.from_numpy(state).float().to(DEVICE)
+        self.actor_local.eval()
+        with torch.no_grad():
+            action = self.actor_local(state).cpu().data.numpy()
+        self.actor_local.train()
+        if add_noise:
+            action += self.noise.sample()
+        return np.clip(action, -1, 1)
+
     def step(self):
         config = self.config
         env_driver = config.env_driver
-        self.actor_local.eval()
-        with torch.no_grad():
-            actions = to_np(self.actor_local(self.states))
-        self.actor_local.train()
-        actions += config.noise.sample()
+        actions = self.act(self.states)
         next_states, rs, dones, _ = env_driver.step(actions)
         if dones:
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)

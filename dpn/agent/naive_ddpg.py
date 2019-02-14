@@ -33,7 +33,7 @@ class DDPGAgent(Agent):
         self.critic_local = Critic(state_size, action_size, 2).to(DEVICE)
         self.critic_target = Critic(state_size, action_size, 2).to(DEVICE)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=0)
-
+        print(self.critic_local, self.critic_target, self.actor_local, self.actor_target)
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -55,17 +55,17 @@ class DDPGAgent(Agent):
         with torch.no_grad():
             actions = to_np(self.actor_local(self.states))
         self.actor_local.train()
-        actions += np.array([n.sample() for n in config.noise])
+        actions += config.noise.sample()
         next_states, rs, dones, _ = env_driver.step(actions)
-        if dones[0]:
+        if dones:
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)
             self.episode_reward = 0
             self.episode_cnt += 1
+            next_states = env_driver.reset()
         else:
-            self.episode_reward += rs[0]
+            self.episode_reward += rs
 
-        for s, a, ns, r, d in zip(*[self.states, actions, next_states, rs, dones]):
-            self.memory.add([s, a, ns, r, d])
+        self.memory.add([self.states, actions, next_states, rs, dones])
         self.states = next_states
 
         experiences = self.memory.sample(self.batch_size)

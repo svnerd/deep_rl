@@ -18,7 +18,7 @@ config.env_driver = env
 config.soft_update_tau = 1e-3
 config.discount = 0.99
 config.score_tracker = ScoreTracker(good_target=100, window_len=100)
-config.noise = [OUNoise(1, seed=2)] * 1
+config.noise = OUNoise(1, seed=2)
 
 
 agent = DDPGAgent(config)

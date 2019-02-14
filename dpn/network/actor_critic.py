@@ -15,6 +15,7 @@ class ActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net,
                  actor_net=None, critic_net=None):
         super(ActorCriticNet, self).__init__()
+        torch.manual_seed(2)
         if shared_net is None:
             raise Exception("shared net cannot be none")
         if actor_net is None:
@@ -25,7 +26,9 @@ class ActorCriticNet(nn.Module):
         self.actor_net = actor_net
         self.critic_net = critic_net
         self.fc_actor_out = nn.Linear(actor_net.feature_dim, action_dim)
+        self.fc_actor_out.weight.data.uniform_(-3e-3, 3e-3)
         self.fc_critic_out = nn.Linear(critic_net.feature_dim, 1)
+        self.fc_critic_out.weight.data.uniform_(-3e-3, 3e-3)
 
 class DeterministicActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net, actor_net, critic_net):

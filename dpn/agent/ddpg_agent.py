@@ -41,6 +41,7 @@ class DDPGAgent(Agent):
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)
             self.episode_reward = 0
             self.episode_cnt += 1
+            [n.reset() for n in config.noise]
         else:
             self.episode_reward += rs[0]
 

@@ -143,6 +143,7 @@ def _get_action_dim(action_space):
 class EnvDriver:
     def __init__(self, name='CartPole-v0', num_envs=1, single_process=True):
         envs = [gym.make(name) for _ in range(num_envs)]
+        [env.seed(2) for env in envs]
         if single_process:
             self.env = SerialEnv(envs)
         else:

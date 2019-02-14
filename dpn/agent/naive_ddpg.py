@@ -84,7 +84,7 @@ class DDPGAgent(Agent):
         actions_next = self.actor_target(next_states)
         Q_targets_next = self.critic_target(next_states, actions_next)
         # Compute Q targets for current states (y_i)
-        Q_targets = rewards + (config.discount * Q_targets_next * (1 - dones))
+        Q_targets = tensor_float(rewards) + (config.discount * Q_targets_next * tensor_float(1 - dones))
         # Compute critic loss
         Q_expected = self.critic_local(states, actions)
         critic_loss = F.mse_loss(Q_expected, Q_targets)
@@ -93,13 +93,15 @@ class DDPGAgent(Agent):
         critic_loss.backward()
         self.critic_optimizer.step()
 
-
-        a = self.actor_local(states)
-        states = tensor_float(states).detach()
-        actor_loss = -self.critic_local(states, a).mean()
+        # ---------------------------- update actor ---------------------------- #
+        # Compute actor loss
+        actions_pred = self.actor_local(states)
+        actor_loss = -self.critic_local(states, actions_pred).mean()
+        # Minimize the loss
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+
         self.soft_update(self.critic_local, self.critic_target, config.soft_update_tau)
         self.soft_update(self.actor_local, self.actor_target, config.soft_update_tau)
         return config.score_tracker.is_good()

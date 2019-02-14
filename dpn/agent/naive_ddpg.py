@@ -78,22 +78,24 @@ class DDPGAgent(Agent):
         experiences = self.memory.sample(self.batch_size)
         if experiences is None:
             return
-        states, actions, next_states, rewards, dones = experiences
-        a_next = self.actor_target(next_states)
-        q_next = self.critic_target(next_states, a_next)
-        q_target = tensor_float(rewards) + config.discount * tensor_float(1 - dones) * q_next
-        # doesn't need derivative
-        q_target.detach()
-        q = self.critic_local(states, actions)
 
-        critic_loss = F.mse_loss(q, q_target)
+        actions_next = self.actor_target(next_states)
+        Q_targets_next = self.critic_target(next_states, actions_next)
+        # Compute Q targets for current states (y_i)
+        Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
+        # Compute critic loss
+        Q_expected = self.critic_local(states, actions)
+        critic_loss = F.mse_loss(Q_expected, Q_targets)
+        # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         self.critic_optimizer.step()
 
-        a = self.actor_local(states)
-        states = tensor_float(states).detach()
-        actor_loss = -self.critic_local(states, a).mean()
+        # ---------------------------- update actor ---------------------------- #
+        # Compute actor loss
+        actions_pred = self.actor_local(states)
+        actor_loss = -self.critic_local(states, actions_pred).mean()
+        # Minimize the loss
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()

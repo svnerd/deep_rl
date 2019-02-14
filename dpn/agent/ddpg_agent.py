@@ -20,8 +20,12 @@ class DDPGAgent(Agent):
     def __soft_update(self):
         config = self.config
         tau = config.soft_update_tau
-        for target_param, local_param in zip(config.target_network.parameters(),
-                                             config.network.parameters()):
+        for target_param, local_param in zip(config.target_network.get_actor_params(),
+                                             config.network.get_actor_params()):
+            target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+
+        for target_param, local_param in zip(config.target_network.get_critic_params(),
+                                             config.network.get_critic_params()):
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
     def step(self):
@@ -30,8 +34,8 @@ class DDPGAgent(Agent):
         config.network.eval()
         with torch.no_grad():
             actions = to_np(config.network.actor(self.states))
+        config.network.train()
         actions += np.array([n.sample() for n in config.noise])
-        actions = np.clip(actions, -1, 1)
         next_states, rs, dones, _ = env_driver.step(actions)
         if dones[0]:
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)
@@ -54,7 +58,6 @@ class DDPGAgent(Agent):
         # doesn't need derivative
         q_target.detach()
         q = config.network.critic(states, actions)
-        config.network.train()
 
         critic_loss = F.mse_loss(q, q_target)
         config.critic_optimizer.zero_grad()

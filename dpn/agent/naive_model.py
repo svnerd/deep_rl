@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from drl.util.device import to_np, tensor_float
+
 
 def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
@@ -35,6 +37,7 @@ class Actor(nn.Module):
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, state):
+        state =tensor_float(state)
         """Build an actor (policy) network that maps states -> actions."""
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
@@ -67,6 +70,8 @@ class Critic(nn.Module):
         self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, state, action):
+        state = tensor_float(state)
+        action = tensor_float(action)
         """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
         xs = F.relu(self.fcs1(state))
         x = torch.cat((xs, action), dim=1)

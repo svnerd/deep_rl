@@ -54,7 +54,7 @@ class DDPGAgent(Agent):
         self.actor_local.eval()
         with torch.no_grad():
             actions = to_np(self.actor_local(self.states))
-        config.network.train()
+        self.actor_local.train()
         actions += np.array([n.sample() for n in config.noise])
         next_states, rs, dones, _ = env_driver.step(actions)
         if dones[0]:

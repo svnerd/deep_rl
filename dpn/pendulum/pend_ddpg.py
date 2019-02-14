@@ -3,7 +3,7 @@ from drl.framework.config import DDPGConfig
 from drl.framework.env import EnvDriver
 from drl.dpn.network.actor_critic import DeterministicActorCriticNet
 from drl.framework.network import FCNet, PassthroughNet, FCActInjected1Net
-from drl.dpn.agent.ddpg_agent import DDPGAgent
+from drl.dpn.agent.naive_ddpg import DDPGAgent
 from drl.util.score_tracker import ScoreTracker
 from drl.util.noise import OUNoise
 from drl.util.device import DEVICE

@@ -20,8 +20,12 @@ class DDPGAgent(Agent):
     def __soft_update(self):
         config = self.config
         tau = config.soft_update_tau
-        for target_param, local_param in zip(config.target_network.parameters(),
-                                             config.network.parameters()):
+        for target_param, local_param in zip(config.target_network.get_actor_params(),
+                                             config.network.get_actor_params()):
+            target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+
+        for target_param, local_param in zip(config.target_network.get_critic_params(),
+                                             config.network.get_critic_params()):
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
     def step(self):
@@ -37,6 +41,7 @@ class DDPGAgent(Agent):
             config.score_tracker.score_tracking(self.episode_cnt, self.episode_reward)
             self.episode_reward = 0
             self.episode_cnt += 1
+            [n.reset() for n in config.noise]
         else:
             self.episode_reward += rs[0]
 

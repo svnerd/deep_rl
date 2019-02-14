@@ -30,7 +30,7 @@ if __name__ == '__main__':
     config.soft_update_tau = 1e-3
     config.discount = 0.99
     action_dim = config.env_driver.action_dim
-    config.noise = [OUNoise(action_dim, seed=100)] * num_env
+    config.noise = [OUNoise(action_dim, seed=2)] * num_env
     obs_dim = config.env_driver.obs_dim
     config.network = make_ddpg_net(config)
     config.optimizer = None

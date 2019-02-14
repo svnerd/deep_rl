@@ -1,23 +1,32 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-
+import numpy as np
 """
 NOTE:
 all class variables should be either Module or Module list so that
 the class object's parameters() function can recursively includes 
 all modules' parameters(). 
 """
+
+def hidden_init(layer):
+    fan_in = layer.weight.data.size()[0]
+    lim = 1. / np.sqrt(fan_in)
+    return (-lim, lim)
+
 class FCNet(nn.Module):
     def __init__(self, input_dim, hidden_units):
         super(FCNet, self).__init__()
+        torch.manual_seed(2)
         dims = [input_dim] + hidden_units
         self.layers = []
         for i in range(1, len(dims)):
             print("nn.Linear({}, {})".format(dims[i-1], dims[i]))
             self.layers.append(nn.Linear(dims[i-1], dims[i]))
-        self.layers = nn.ModuleList(self.layers)
         self.feature_dim = hidden_units[-1]
+        for layer in self.layers:
+            layer.weight.data.uniform_(*hidden_init(layer))
+        self.layers = nn.ModuleList(self.layers)
 
     def forward(self, x):
         for layer in self.layers:
@@ -27,6 +36,7 @@ class FCNet(nn.Module):
 class FCActInjected1Net(nn.Module):
     def __init__(self, input_dim, action_dim, hidden_units):
         super(FCActInjected1Net, self).__init__()
+        torch.manual_seed(2)
         if (len(hidden_units) < 2):
             raise Exception("it need to contain 2 layers at least!")
         self.layers = []
@@ -37,6 +47,8 @@ class FCActInjected1Net(nn.Module):
             self.layers.append(nn.Linear(dims[i-1], dims[i]))
         self.layers = nn.ModuleList(self.layers)
         self.feature_dim = hidden_units[-1]
+        for layer in self.layers:
+            layer.weight.data.uniform_(*hidden_init(layer))
 
     def forward(self, x, action):
         cnt = 0

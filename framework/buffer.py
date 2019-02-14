@@ -56,7 +56,7 @@ class StepStorage:
 class ExperienceMemory:
     def __init__(self, memory_size):
         self.memory = deque(maxlen=memory_size)
-        random.seed(193)
+        random.seed(2)
 
     def add(self, experience):
         self.memory.append(experience)

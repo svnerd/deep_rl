@@ -5,7 +5,7 @@ import numpy as np
 from collections import deque
 import matplotlib.pyplot as plt
 
-from .ddpg_agent import Agent
+from drl.dpn.pendulum.udacity.ddpg_agent import Agent
 
 env = gym.make('Pendulum-v0')
 env.seed(2)

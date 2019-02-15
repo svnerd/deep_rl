@@ -1,18 +1,21 @@
 from drl.framework.agent import Agent
 from drl.framework.buffer import ExperienceMemory
-from drl.util.device import to_np, tensor_float
+from drl.util.device import to_np, tensor_float, DEVICE
 import torch.nn.functional as F
 import numpy as np
-import torch
+import torch, random
+from collections import namedtuple, deque
 
 # note should only have 1 active tensor(requires derivative) in the loss.
+BUFFER_SIZE = int(1e5)  # replay buffer size
+BATCH_SIZE = 128        # minibatch size
 
 class DDPGAgent(Agent):
     def __init__(self, config):
         super(DDPGAgent, self).__init__()
         self.config = config
         self.states = config.env_driver.reset()
-        self.memory = ExperienceMemory(int(1e5))
+        self.memory = ReplayBuffer(1, BUFFER_SIZE, BATCH_SIZE, 2)
         self.batch_size = 128
         self.episode_reward = 0
         self.episode_cnt = 0
@@ -46,13 +49,13 @@ class DDPGAgent(Agent):
             self.episode_reward += rs[0]
 
         for s, a, ns, r, d in zip(*[self.states, actions, next_states, rs, dones]):
-            self.memory.add([s, a, ns, r, d])
+            self.memory.add(s, a, r, ns, d)
         self.states = next_states
 
-        experiences = self.memory.sample(self.batch_size)
-        if experiences is None:
+        if len(self.memory) <= BATCH_SIZE:
             return
-        states, actions, next_states, rewards, dones = experiences
+        experiences = self.memory.sample()
+        states, actions, rewards, next_states, dones = experiences
         a_next = config.target_network.actor(next_states)
         q_next = config.target_network.critic(next_states, a_next)
         q_target = tensor_float(rewards) + config.discount * tensor_float(1 - dones) * q_next
@@ -73,3 +76,41 @@ class DDPGAgent(Agent):
         config.actor_optimizer.step()
         self.__soft_update()
         return config.score_tracker.is_good()
+
+
+class ReplayBuffer:
+    """Fixed-size buffer to store experience tuples."""
+
+    def __init__(self, action_size, buffer_size, batch_size, seed):
+        """Initialize a ReplayBuffer object.
+        Params
+        ======
+            buffer_size (int): maximum size of buffer
+            batch_size (int): size of each training batch
+        """
+        self.action_size = action_size
+        self.memory = deque(maxlen=buffer_size)  # internal memory (deque)
+        self.batch_size = batch_size
+        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
+        self.seed = random.seed(seed)
+
+    def add(self, state, action, reward, next_state, done):
+        """Add a new experience to memory."""
+        e = self.experience(state, action, reward, next_state, done)
+        self.memory.append(e)
+
+    def sample(self):
+        """Randomly sample a batch of experiences from memory."""
+        experiences = random.sample(self.memory, k=self.batch_size)
+
+        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(DEVICE)
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).float().to(DEVICE)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(DEVICE)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(DEVICE)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(DEVICE)
+
+        return (states, actions, rewards, next_states, dones)
+
+    def __len__(self):
+        """Return the current size of internal memory."""
+        return len(self.memory)

@@ -1,5 +1,5 @@
 import torch
-from drl.util.device import tensor_float
+from drl.util.device import tensor_float, DEVICE
 from collections import deque, namedtuple
 import random
 import numpy as np
@@ -65,7 +65,9 @@ class ExperienceMemory:
         if len(self.memory) < batch_size:
             return None
         batch = random.sample(self.memory, k=batch_size)
-        return (np.asarray(batch))
+        batch_data = list(map(lambda x: np.asarray(x), zip(*batch)))
+        return [(np.vstack(b)) for b in batch_data]
+
 
 
 class ReplayBuffer:
@@ -93,11 +95,11 @@ class ReplayBuffer:
         """Randomly sample a batch of experiences from memory."""
         experiences = random.sample(self.memory, k=self.batch_size)
 
-        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(device)
-        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).float().to(device)
-        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
-        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
-        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
+        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(DEVICE)
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).float().to(DEVICE)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(DEVICE)
+        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(DEVICE)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(DEVICE)
 
         return (states, actions, rewards, next_states, dones)
 
@@ -111,10 +113,17 @@ if __name__ == '__main__':
     pool.add([1, 2, 3])
     pool.add([4, 5, 6])
     pool.add([7, 8, 9])
-    for a in pool.sample(batch_size=2):
-        print(a)
+    experience = pool.sample(batch_size=2)
+    a, b, c = experience
+    print(a, b, c)
 
-'''
+    r = ReplayBuffer(action_size=1, buffer_size=100, batch_size=2, seed=2)
+    r.add(1, 2, 3, 4, 5)
+    r.add(11, 22, 33, 44, 55)
+    r.add(111, 222, 333, 444, 555)
+    a, b, c, d, e = r.sample()
+    print(a, b, c, d, e)
+    '''
     s = StepStorage(3, 2)
     data = {
         'a': tensor_float(np.array([1, 2])),

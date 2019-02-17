@@ -2,6 +2,7 @@ import numpy as np
 import random
 import copy
 from collections import namedtuple, deque
+from drl.framework.buffer import ExperienceMemory
 
 from drl.dpn.pendulum.udacity.model import Actor, Critic
 
@@ -49,17 +50,20 @@ class Agent():
         self.noise = OUNoise(action_size, random_seed)
 
         # Replay memory
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
-    
+        #self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
+        self.memory = ExperienceMemory(BUFFER_SIZE)# ReplayBuffer(1, BUFFER_SIZE, BATCH_SIZE, 2)
+
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
         # Save experience / reward
-        self.memory.add(state, action, reward, next_state, done)
+        #self.memory.add(state, action, reward, next_state, done)
+        self.memory.add([state, action, reward, next_state, done])
 
         # Learn, if enough samples are available in memory
-        if len(self.memory) > BATCH_SIZE:
-            experiences = self.memory.sample()
-            self.learn(experiences, GAMMA)
+        experiences = self.memory.sample(BATCH_SIZE)
+        if experiences is None:
+            return
+        self.learn(experiences, GAMMA)
 
     def act(self, state, add_noise=True):
         """Returns actions for given state as per current policy."""

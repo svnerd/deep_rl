@@ -15,7 +15,7 @@ class DDPGAgent(Agent):
         super(DDPGAgent, self).__init__()
         self.config = config
         self.states = config.env_driver.reset()
-        self.memory = ExperienceMemory(BUFFER_SIZE)# ReplayBuffer(1, BUFFER_SIZE, BATCH_SIZE, 2)
+        self.memory = ReplayBuffer(1, BUFFER_SIZE, BATCH_SIZE, 2)#ExperienceMemory(BUFFER_SIZE)#
         self.batch_size = 128
         self.episode_reward = 0
         self.episode_cnt = 0
@@ -48,12 +48,18 @@ class DDPGAgent(Agent):
         else:
             self.episode_reward += rs[0]
 
-        for s, a, ns, r, d in zip(*[self.states, actions, next_states, rs, dones]):
-            self.memory.add([s, a, r, ns, d])
+        #for s, a, ns, r, d in zip(*[self.states, actions, next_states, rs, dones]):
+        #    self.memory.add([s, a, r, ns, d])
+        self.memory.add(self.states, actions, rs, next_states, dones)
+
         self.states = next_states
-        experiences = self.memory.sample(BATCH_SIZE)
-        if experiences is None:
+        #experiences = self.memory.sample(BATCH_SIZE)
+        #if experiences is None:
+        #    return
+        if len(self.memory) <= BATCH_SIZE:
             return
+        experiences = self.memory.sample()
+
         states, actions, rewards, next_states, dones = experiences
         a_next = config.target_network.actor(next_states)
         q_next = config.target_network.critic(next_states, a_next)

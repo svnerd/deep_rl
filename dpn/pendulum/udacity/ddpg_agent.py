@@ -3,6 +3,7 @@ import random
 import copy
 from collections import namedtuple, deque
 from drl.framework.buffer import ExperienceMemory
+from drl.util.device import to_np, tensor_float, DEVICE
 
 from drl.dpn.pendulum.udacity.model import Actor, Critic
 
@@ -91,7 +92,7 @@ class Agent():
             experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples 
             gamma (float): discount factor
         """
-        states, actions, rewards, next_states, dones = experiences
+        states, actions, rewards, next_states, dones = [tensor_float(1-(1-a)) for a in experiences]
 
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models

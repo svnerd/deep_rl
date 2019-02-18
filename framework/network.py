@@ -9,10 +9,23 @@ the class object's parameters() function can recursively includes
 all modules' parameters(). 
 """
 
-def hidden_init(layer):
+
+def _hidden_init(layer, scale):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
-    return (-lim, lim)
+    return (-lim * scale, lim * scale)
+
+
+def _init_layers(net, scale=1.0):
+    for layer in net.layers:
+        layer.weight.data.uniform_(*_hidden_init(layer, scale))
+
+
+class NetOutputWrapper(nn.Module):
+    def __init__(self, net, output_dim):
+        super(NetOutputWrapper, self).__init__()
+        self.
+
 
 class FCNet(nn.Module):
     def __init__(self, input_dim, hidden_units):
@@ -23,18 +36,18 @@ class FCNet(nn.Module):
         for i in range(1, len(dims)):
             print("nn.Linear({}, {})".format(dims[i-1], dims[i]))
             self.layers.append(nn.Linear(dims[i-1], dims[i]))
-        self.feature_dim = hidden_units[-1]
-        for layer in self.layers:
-            layer.weight.data.uniform_(*hidden_init(layer))
         self.layers = nn.ModuleList(self.layers)
+        _init_layers(self)
+        self.feature_dim = hidden_units[-1]
 
     def forward(self, x):
         for layer in self.layers:
             x = F.relu(layer(x))
         return x
 
+
 class FCActInjected1Net(nn.Module):
-    def __init__(self, input_dim, action_dim, hidden_units):
+    def __init__(self, input_dim, action_dim, hidden_units, output_dim=None):
         super(FCActInjected1Net, self).__init__()
         torch.manual_seed(2)
         if (len(hidden_units) < 2):
@@ -46,9 +59,12 @@ class FCActInjected1Net(nn.Module):
         for i in range(1, len(dims)):
             self.layers.append(nn.Linear(dims[i-1], dims[i]))
         self.layers = nn.ModuleList(self.layers)
+        if output_dim != None:
+            self.output_layers = nn.Linear(dims[-1], output_dim)
+        else:
+            self.output_layers = None
         self.feature_dim = hidden_units[-1]
-        for layer in self.layers:
-            layer.weight.data.uniform_(*hidden_init(layer))
+        _init_layers(self)
 
     def forward(self, x, action):
         cnt = 0
@@ -58,6 +74,7 @@ class FCActInjected1Net(nn.Module):
             x = F.relu(layer(x))
             cnt += 1
         return x
+
 
 class PassthroughNet(nn.Module):
     def __init__(self, dim):

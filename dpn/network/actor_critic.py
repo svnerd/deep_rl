@@ -11,6 +11,7 @@ ActorCriticNet has 3 components:
 3. Actor linear NN output (output size is the action size)
    Critic linear NN output (output size 1 -- the value)
 '''
+
 class ActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net,
                  actor_net=None, critic_net=None):
@@ -29,6 +30,7 @@ class ActorCriticNet(nn.Module):
         self.fc_actor_out.weight.data.uniform_(-3e-3, 3e-3)
         self.fc_critic_out = nn.Linear(critic_net.feature_dim, 1)
         self.fc_critic_out.weight.data.uniform_(-3e-3, 3e-3)
+
 
 class DeterministicActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net, actor_net, critic_net):

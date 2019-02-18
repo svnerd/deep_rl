@@ -10,6 +10,7 @@ class Config:
         self.discount = 1.0
         self.env_driver = None
         self.score_tracker = None
+        self.network = None
 
 class DDPGConfig(Config):
     def __init__(self):

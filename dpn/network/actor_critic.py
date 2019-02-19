@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from drl.util.device import tensor_float
 from drl.framework.network import PassthroughNet, FCNet
+
 '''
 ActorCriticNet has 3 components:
 1. the shared DNN
@@ -11,6 +12,7 @@ ActorCriticNet has 3 components:
 3. Actor linear NN output (output size is the action size)
    Critic linear NN output (output size 1 -- the value)
 '''
+
 
 class ActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net,
@@ -62,6 +64,7 @@ class DeterministicActorCriticNet(nn.Module):
         x = self.net.critic_net.forward(x, action)
         return self.net.fc_critic_out.forward(x)
 
+
 class CategoricalActorCriticNet(nn.Module):
     def __init__(self, action_dim, shared_net,
                  actor_net=None, critic_net=None):
@@ -87,6 +90,7 @@ class CategoricalActorCriticNet(nn.Module):
             'log_pi_a': log_prob,
             'v': v
         }
+
 
 if __name__ == '__main__':
     net = CategoricalActorCriticNet(4, FCNet(6, [16, 64, 10]))

@@ -1,17 +1,16 @@
 # main function that sets up environments
 # perform training loop
 
-import envs
-from .buffer import ReplayBuffer
-from .maddpg import MADDPG
+from envs import make_parallel_env
+from buffer import ReplayBuffer
+from maddpg import MADDPG
 import torch
 import numpy as np
-from tensorboardX import SummaryWriter
 import os
-from .utilities import transpose_list, transpose_to_tensor
+from utilities import transpose_list, transpose_to_tensor
 
 # keep training awake
-from .workspace_utils import keep_awake
+from workspace_utils import keep_awake
 
 # for saving gif
 import imageio
@@ -21,7 +20,7 @@ def seeding(seed=1):
     torch.manual_seed(seed)
 
 def pre_process(entity, batchsize):
-    processed_entity = []
+    processed_entity = []   
     for j in range(3):
         list = []
         for i in range(batchsize):
@@ -59,14 +58,14 @@ def main():
     os.makedirs(model_dir, exist_ok=True)
 
     torch.set_num_threads(parallel_envs)
-    env = envs.make_parallel_env(parallel_envs)
+    env = make_parallel_env(parallel_envs)
     
     # keep 5000 episodes worth of replay
     buffer = ReplayBuffer(int(5000*episode_length))
     
     # initialize policy and critic
     maddpg = MADDPG()
-    logger = SummaryWriter(log_dir=log_path)
+    #logger = SummaryWriter(log_dir=log_path)
     agent0_reward = []
     agent1_reward = []
     agent2_reward = []
@@ -139,7 +138,7 @@ def main():
         if len(buffer) > batchsize and episode % episode_per_update < parallel_envs:
             for a_i in range(3):
                 samples = buffer.sample(batchsize)
-                maddpg.update(samples, a_i, logger)
+                maddpg.update(samples, a_i)
             maddpg.update_targets() #soft update the target network towards the actual networks
 
         
@@ -155,7 +154,7 @@ def main():
             agent1_reward = []
             agent2_reward = []
             for a_i, avg_rew in enumerate(avg_rewards):
-                logger.add_scalar('agent%i/mean_episode_rewards' % a_i, avg_rew, episode)
+                print('agent%i/mean_episode_rewards' % a_i, avg_rew, episode)
 
         #saving model
         save_dict_list =[]
@@ -176,7 +175,6 @@ def main():
                             frames, duration=.04)
 
     env.close()
-    logger.close()
     timer.finish()
 
 if __name__=='__main__':

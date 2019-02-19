@@ -1,6 +1,6 @@
 from env_wrapper import SubprocVecEnv, DummyVecEnv
 import numpy as np
-import multiagent.scenarios as scenarios
+from multiagent import scenarios
 from multiagent.environment import MultiAgentEnv
 
 def make_parallel_env(n_rollout_threads, seed=1):

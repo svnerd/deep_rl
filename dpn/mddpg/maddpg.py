@@ -43,7 +43,7 @@ class MADDPG:
         target_actions = [ddpg_agent.target_act(obs, noise) for ddpg_agent, obs in zip(self.maddpg_agent, obs_all_agents)]
         return target_actions
 
-    def update(self, samples, agent_number, logger):
+    def update(self, samples, agent_number):
         """update the critics and actors of all the agents """
 
         # need to transpose each element of the samples
@@ -100,7 +100,7 @@ class MADDPG:
 
         al = actor_loss.cpu().detach().item()
         cl = critic_loss.cpu().detach().item()
-        logger.add_scalars('agent%i/losses' % agent_number,
+        print('agent%i/losses' % agent_number,
                            {'critic loss': cl,
                             'actor_loss': al},
                            self.iter)

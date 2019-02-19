@@ -16,28 +16,29 @@ def _hidden_init(layer, scale):
     return (-lim * scale, lim * scale)
 
 
-def _init_layers(net, scale=1.0):
-    for layer in net.layers:
+def _init_layers(layers, scale=1.0):
+    for layer in layers:
         layer.weight.data.uniform_(*_hidden_init(layer, scale))
 
 
-class NetOutputWrapper(nn.Module):
-    def __init__(self, net, output_dim):
-        super(NetOutputWrapper, self).__init__()
-        self.
+def _init_output_layer(layer, scale=1.0):
+    layer.weight.data.uniform_(-3e-3 * scale, 3e-3 * scale)
+
+
+def _make_hidden_layers(input_dim, hidden_units):
+    dims = [input_dim] + hidden_units
+    layers = []
+    for i in range(1, len(dims)):
+        print("nn.Linear({}, {})".format(dims[i-1], dims[i]))
+        layers.append(nn.Linear(dims[i-1], dims[i]))
+    _init_layers(layers)
+    return nn.ModuleList(layers)
 
 
 class FCNet(nn.Module):
     def __init__(self, input_dim, hidden_units):
         super(FCNet, self).__init__()
-        torch.manual_seed(2)
-        dims = [input_dim] + hidden_units
-        self.layers = []
-        for i in range(1, len(dims)):
-            print("nn.Linear({}, {})".format(dims[i-1], dims[i]))
-            self.layers.append(nn.Linear(dims[i-1], dims[i]))
-        self.layers = nn.ModuleList(self.layers)
-        _init_layers(self)
+        self.layers = _make_hidden_layers(input_dim, hidden_units)
         self.feature_dim = hidden_units[-1]
 
     def forward(self, x):
@@ -46,34 +47,61 @@ class FCNet(nn.Module):
         return x
 
 
+class FCNetOutputLayer(nn.Module):
+    def __init__(self, input_dim, hidden_units, output_dim):
+        super(FCNetOutputLayer, self).__init__()
+        self.layers = _make_hidden_layers(input_dim, hidden_units)
+        self.output_layer = nn.Linear(hidden_units[-1], output_dim)
+
+    def forward(self, x):
+        for layers in self.layers:
+            x = F.relu(layers(x))
+        return self.output_layer(x)
+
+
+def _make_hidden_layers_with_action_input(input_dim, action_dim, hidden_units):
+    if (len(hidden_units) < 2):
+        raise Exception("it need to contain 2 layers at least!")
+    layers = []
+    layers.append(nn.Linear(input_dim, hidden_units[0]))
+    layers.append(nn.Linear(hidden_units[0] + action_dim, hidden_units[1]))
+    dims = hidden_units[2:]
+    for i in range(1, len(dims)):
+        layers.append(nn.Linear(dims[i-1], dims[i]))
+    _init_layers(layers)
+    return nn.ModuleList(layers)
+
+
+def _forward_with_action(layers, x, action):
+    cnt = 0
+    for layer in layers:
+        if cnt == 1:
+            x = torch.cat([x, action], dim=1)
+        x = F.relu(layer(x))
+        cnt += 1
+    return x
+
+
 class FCActInjected1Net(nn.Module):
-    def __init__(self, input_dim, action_dim, hidden_units, output_dim=None):
+    def __init__(self, input_dim, action_dim, hidden_units):
         super(FCActInjected1Net, self).__init__()
-        torch.manual_seed(2)
-        if (len(hidden_units) < 2):
-            raise Exception("it need to contain 2 layers at least!")
-        self.layers = []
-        self.layers.append(nn.Linear(input_dim, hidden_units[0]))
-        self.layers.append(nn.Linear(hidden_units[0] + action_dim, hidden_units[1]))
-        dims = hidden_units[2:]
-        for i in range(1, len(dims)):
-            self.layers.append(nn.Linear(dims[i-1], dims[i]))
-        self.layers = nn.ModuleList(self.layers)
-        if output_dim != None:
-            self.output_layers = nn.Linear(dims[-1], output_dim)
-        else:
-            self.output_layers = None
+        self.layers = _make_hidden_layers_with_action_input(input_dim, action_dim, hidden_units)
         self.feature_dim = hidden_units[-1]
-        _init_layers(self)
 
     def forward(self, x, action):
-        cnt = 0
-        for layer in self.layers:
-            if cnt == 1:
-                x = torch.cat([x, action], dim=1)
-            x = F.relu(layer(x))
-            cnt += 1
-        return x
+        return _forward_with_action(self.layers, x, action)
+
+
+class FCActInjected1NetOutputLayer(nn.Module):
+    def __init__(self, input_dim, action_dim, hidden_units, output_dim):
+        super(FCActInjected1NetOutputLayer, self).__init__()
+        self.layers = _make_hidden_layers_with_action_input(input_dim, action_dim, hidden_units)
+        self.output_layer = nn.Linear(hidden_units[-1], output_dim)
+        _init_output_layer(self.output_layer)
+
+    def forward(self, x, action):
+        x = _forward_with_action(self.layers, x, action)
+        return self.output_layer(x)
 
 
 class PassthroughNet(nn.Module):

@@ -114,7 +114,6 @@ class SubprocessEnv(Envs):
         for t, action in zip(self.scheduler_terms, actions):
             t.send(('step', action))
 
-
     def step_wait(self):
         results = [ t.recv() for t in self.scheduler_terms]
         s, r, done, info = zip(*results)

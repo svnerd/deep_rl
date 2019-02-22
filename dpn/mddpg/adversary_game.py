@@ -4,6 +4,8 @@ from drl.framework.env import EnvDriver
 from drl.util.score_tracker import ScoreTracker
 from drl.dpn.agent.mddpg_agent import MDDPGAgent
 import random
+import multiagent as mt
+import make_env
 
 NOISE_DECAY=0.99
 NUM_AGENTS=3

@@ -100,10 +100,10 @@ class MADDPG:
 
         al = actor_loss.cpu().detach().item()
         cl = critic_loss.cpu().detach().item()
-        print('agent%i/losses' % agent_number,
-                           {'critic loss': cl,
-                            'actor_loss': al},
-                           self.iter)
+        #logger.add_scalars('agent%i/losses' % agent_number,
+        #                   {'critic loss': cl,
+        #                    'actor_loss': al},
+        #                   self.iter)
 
     def update_targets(self):
         """soft update targets"""

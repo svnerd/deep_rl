@@ -1,7 +1,7 @@
 # main function that sets up environments
 # perform training loop
 
-from envs import make_parallel_env
+import envs
 from buffer import ReplayBuffer
 from maddpg import MADDPG
 import torch
@@ -20,7 +20,7 @@ def seeding(seed=1):
     torch.manual_seed(seed)
 
 def pre_process(entity, batchsize):
-    processed_entity = []   
+    processed_entity = []
     for j in range(3):
         list = []
         for i in range(batchsize):
@@ -58,7 +58,7 @@ def main():
     os.makedirs(model_dir, exist_ok=True)
 
     torch.set_num_threads(parallel_envs)
-    env = make_parallel_env(parallel_envs)
+    env = envs.make_parallel_env(parallel_envs)
     
     # keep 5000 episodes worth of replay
     buffer = ReplayBuffer(int(5000*episode_length))
@@ -79,7 +79,7 @@ def main():
     timer = pb.ProgressBar(widgets=widget, maxval=number_of_episodes).start()
 
     # use keep_awake to keep workspace from disconnecting
-    for episode in keep_awake(range(0, number_of_episodes, parallel_envs)):
+    for episode in range(0, number_of_episodes, parallel_envs):
 
         timer.update(episode)
 
@@ -91,7 +91,7 @@ def main():
         #for calculating rewards for this particular episode - addition of all time steps
 
         # save info or not
-        save_info = ((episode) % save_interval < parallel_envs or episode==number_of_episodes-parallel_envs)
+        save_info = False#((episode) % save_interval < parallel_envs or episode==number_of_episodes-parallel_envs)
         frames = []
         tmax = 0
         
@@ -175,6 +175,7 @@ def main():
                             frames, duration=.04)
 
     env.close()
+    #logger.close()
     timer.finish()
 
 if __name__=='__main__':

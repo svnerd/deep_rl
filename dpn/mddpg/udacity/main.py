@@ -34,7 +34,7 @@ def pre_process(entity, batchsize):
 def main():
     seeding()
     # number of parallel agents
-    parallel_envs = 4
+    parallel_envs = 2
     # number of training episodes.
     # change this to higher number to experiment. say 30000.
     number_of_episodes = 1000
@@ -111,12 +111,10 @@ def main():
             noise *= noise_reduction
             
             actions_array = torch.stack(actions).detach().numpy()
-
             # transpose the list of list
             # flip the first two indices
             # input to step requires the first index to correspond to number of parallel agents
             actions_for_env = np.rollaxis(actions_array,1)
-            
             # step forward one frame
             next_obs, next_obs_full, rewards, dones, info = env.step(actions_for_env)
             

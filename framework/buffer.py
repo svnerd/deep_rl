@@ -66,8 +66,7 @@ class ExperienceMemory:
             return None
         batch = random.sample(self.memory, k=batch_size)
         batch_data = list(map(lambda x: np.asarray(x), zip(*batch)))
-        return [(np.vstack(b)) for b in batch_data]
-
+        return batch_data
 
 
 class ReplayBuffer:

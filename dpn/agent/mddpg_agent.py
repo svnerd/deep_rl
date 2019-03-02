@@ -15,21 +15,21 @@ CRITIC_HIDDEN_LAYER=[32, 16]
 
 
 class GlobalDDPGAgent:
-    def __init__(self, env_info, num_agents):
-        act_dim = env_info.act_dim
+    def __init__(self, env_driver, num_agents):
+        act_dim = env_driver.action_dim
 
         self.actor = FCNetOutputLayer(
-            input_dim=env_info.obs_dim,
+            input_dim=env_driver.obs_dim,
             hidden_units=ACTOR_HIDDEN_LAYER,
             output_dim=act_dim
         )
         self.actor_target = FCNetOutputLayer(
-            input_dim=env_info.obs_dim,
+            input_dim=env_driver.obs_dim,
             hidden_units=ACTOR_HIDDEN_LAYER,
             output_dim=act_dim
         )
 
-        total_act_dim = env_info.obs_dim + act_dim * num_agents
+        total_act_dim = env_driver.obs_dim + act_dim * num_agents
         self.critic = FCNetOutputLayer(
             input_dim=total_act_dim,
             hidden_units=CRITIC_HIDDEN_LAYER,
@@ -48,25 +48,26 @@ class GlobalDDPGAgent:
 
     def __act(self, actor, obs, noise_scale):
         obs = tensor_float(obs)
-        return actor.forward(obs) + noise_scale * self.noise.sample()
+        return actor.forward(obs) + noise_scale * tensor_float(self.noise.sample())
 
     def act(self, obs, noise_scale=0.0):
-        self.__act(self.actor, obs, noise_scale)
+        return self.__act(self.actor, obs, noise_scale)
 
     def target_act(self, obs, noise_scale=0.0):
-        self.__act(self.actor_target, obs, noise_scale)
+        return self.__act(self.actor_target, obs, noise_scale)
 
 
 class MDDPGAgent(Agent):
-    def __init__(self, env_info, num_agents):
+    def __init__(self, env_driver, num_agents):
         super(MDDPGAgent, self).__init__()
-        self.ddpg_agent_list = [GlobalDDPGAgent(env_info, num_agents) for i in range(num_agents)]
+        self.ddpg_agent_list = [GlobalDDPGAgent(env_driver, num_agents) for i in range(num_agents)]
 
     def __target_act(self, agent_obs_list, noise_scale=0.0):
         actions = []
-        for obs, agent in zip(agent_obs_list, self.ddpg_agent_list):
-            actions.append(agent.target_act(obs, noise_scale))
-        return actions
+        for i, agent in enumerate(self.ddpg_agent_list):
+            actions.append(tensor_float(agent.target_act(agent_obs_list[:,i,:], noise_scale)))
+        t = torch.cat(actions, dim=1)
+        return t
 
     def __get_next_target_q(self, agent, next_obs_list, next_obs_full):
         next_actions = self.__target_act(next_obs_list)
@@ -74,22 +75,22 @@ class MDDPGAgent(Agent):
         with torch.no_grad():
             return agent.critic_target.forward(next_target_critic_input)
 
-    def act(self, agent_obs_list, noise_scale=0.0):
+    def act(self, agent_obs, noise_scale=0.0):
         actions = []
-        for obs, agent in zip(agent_obs_list, self.ddpg_agent_list):
+        for i, agent in enumerate(self.ddpg_agent_list):
+            obs = agent_obs[:, i, :]
             actions.append(agent.act(obs, noise_scale))
         return actions
 
     def update(self, samples, agent_id):
         obs, obs_full, action, reward, next_obs, next_obs_full, done = map(tensor_float, samples)
         this_agent = self.ddpg_agent_list[agent_id]
-
         # global optimization of critics.
         this_agent.critic_optimizer.zero_grad()
-        critic_input = torch.cat([obs_full, action], dim=1)
+        critic_input = torch.cat([obs_full, action.reshape((-1, 6))], dim=1)
         v = this_agent.critic.forward(critic_input)
         q_next = self.__get_next_target_q(this_agent, next_obs, next_obs_full)
-        y = reward[agent_id] + GAMMA * q_next * (1-done)
+        y = reward[:, agent_id].reshape(-1, 1) + GAMMA * q_next.reshape(-1, 1) * (1-done[:, agent_id].reshape(-1, 1))
         huber_loss = torch.nn.SmoothL1Loss()
         critic_loss = huber_loss(v, y)
         critic_loss.backward()
@@ -99,7 +100,7 @@ class MDDPGAgent(Agent):
         this_agent.actor_optimizer.zero_grad()
         action_list = []
         for i, agent in enumerate(self.ddpg_agent_list):
-            action = agent.actor.forward(obs[i])
+            action = agent.actor.forward(obs[:, i, :])
             if i == agent_id:
                 action.detach()
             action_list.append(action)

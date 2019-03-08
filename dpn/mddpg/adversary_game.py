@@ -14,12 +14,13 @@ BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64        # minibatch size
 EPISODE_LENGTH = 80
 
-NUM_PARALLEL_ENV = 3
+NUM_PARALLEL_ENV = 5
 
 def seeding(seed=2):
     np.random.seed(seed)
     torch.manual_seed(seed)
     random.seed(seed)
+
 
 def create_env_driver(num_env):
     return MEnvDriver(
@@ -34,6 +35,7 @@ if __name__ == '__main__':
     score_tracker = ScoreTracker(good_target=100, window_len=100)
     replay_buffer = ExperienceMemory(BUFFER_SIZE)
     env = create_env_driver(num_env=NUM_PARALLEL_ENV)
+
     obs, obs_full = env.reset()
     mddpg_agent = MDDPGAgent(env, NUM_AGENTS)
     noise_amp = 2.0
@@ -44,8 +46,17 @@ if __name__ == '__main__':
         actions = mddpg_agent.act(obs, noise_scale=noise_amp)
         noise_amp *= NOISE_DECAY
         actions_array = torch.stack(actions).detach().numpy()
-        actions_for_env = np.rollaxis(actions_array,1)
+        # rollaxis
+        # actions_array.shape
+        # Out[19]: (3, 5, 2)
+        # np.rollaxis(actions_array,0).shape
+        # Out[21]: (3, 5, 2)
+        # np.rollaxis(actions_array,1).shape
+        # Out[20]: (5, 3, 2)
+        # np.rollaxis(actions_array,2).shape
+        # Out[22]: (2, 3, 5)
 
+        actions_for_env = np.rollaxis(actions_array,1)
         next_obs, next_obs_full, reward, done, _ = env.step(actions_for_env)
         step_per_episode += 1
         for i in range(NUM_PARALLEL_ENV):

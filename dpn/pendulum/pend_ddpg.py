@@ -1,6 +1,6 @@
 
 from drl.framework.config import DDPGConfig
-from drl.framework.env import EnvDriver
+from drl.framework.env.single_agent_env import EnvDriver
 from drl.dpn.network.actor_critic import DeterministicActorCriticNet
 from drl.framework.network import FCNet, PassthroughNet, FCActInjected1Net
 from drl.dpn.agent.ddpg_agent import DDPGAgent
@@ -18,6 +18,8 @@ def make_ddpg_net(config):
         actor_net=FCNet(input_dim=obs_dim, hidden_units=[400, 300]),
         critic_net=FCActInjected1Net(input_dim=obs_dim, action_dim=action_dim, hidden_units=[400, 300])
     ).to(DEVICE)
+
+
 
 if __name__ == '__main__':
     config = DDPGConfig()
@@ -39,6 +41,7 @@ if __name__ == '__main__':
     config.target_network = make_ddpg_net(config)
     config.target_network.load_state_dict(config.network.state_dict())
     config.score_tracker = ScoreTracker(good_target=100, window_len=100)
+
     agent = DDPGAgent(config)
     while True:
         if agent.step():

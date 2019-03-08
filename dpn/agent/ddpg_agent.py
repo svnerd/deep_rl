@@ -1,6 +1,6 @@
 from drl.framework.agent import Agent
 from drl.framework.buffer import ExperienceMemory
-from drl.util.device import to_np, tensor_float, DEVICE
+from drl.util.device import to_np, tensor_float
 import torch.nn.functional as F
 import numpy as np
 import torch, random
@@ -50,34 +50,36 @@ class DDPGAgent(Agent):
 
         for s, a, ns, r, d in zip(*[self.states, actions, next_states, rs, dones]):
             self.memory.add([s, a, r, ns, d])
-        #self.memory.add(self.states, actions, rs, next_states, dones)
 
         self.states = next_states
         experiences = self.memory.sample(BATCH_SIZE)
         if experiences is None:
             return
-        #if len(self.memory) <= BATCH_SIZE:
-        #    return
-        #experiences = self.memory.sample()
 
         states, actions, rewards, next_states, dones = experiences
+
+        # ====== generate baseline. it has low variance due to nature of TD =========
         a_next = config.target_network.actor(next_states)
         q_next = config.target_network.critic(next_states, a_next)
         q_target = tensor_float(rewards) + config.discount * tensor_float(1 - dones) * q_next
         # doesn't need derivative
         q_target.detach()
-        q = config.network.critic(states, actions)
 
+        # ======= optimize away difference between baseline and critic network.
+        q = config.network.critic(states, actions)
         critic_loss = F.mse_loss(q, q_target)
         config.critic_optimizer.zero_grad()
         critic_loss.backward()
         config.critic_optimizer.step()
 
+        # ====== According to the paper, the critic networks' deriv is the driv to update action network.
         a = config.network.actor(states)
-        states = tensor_float(states).detach()
         actor_loss = -config.network.critic(states, a).mean()
         config.actor_optimizer.zero_grad()
+        # loss backward has nothing to do with optimizers. it just faithfully
+        # execute deriviatives.
         actor_loss.backward()
+        # it's up to optimizer to decide how to apply the deriviatives.
         config.actor_optimizer.step()
         self.__soft_update()
         return config.score_tracker.is_good()

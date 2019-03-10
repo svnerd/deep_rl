@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 import numpy as np
+from drl.util.device import DEVICE
 """
 NOTE:
 all class variables should be either Module or Module list so that
@@ -52,6 +53,7 @@ class FCNetOutputLayer(nn.Module):
         super(FCNetOutputLayer, self).__init__()
         self.layers = _make_hidden_layers(input_dim, hidden_units)
         self.output_layer = nn.Linear(hidden_units[-1], output_dim)
+        self.to(DEVICE)
 
     def forward(self, x):
         for layers in self.layers:
@@ -98,6 +100,7 @@ class FCActInjected1NetOutputLayer(nn.Module):
         self.layers = _make_hidden_layers_with_action_input(input_dim, action_dim, hidden_units)
         self.output_layer = nn.Linear(hidden_units[-1], output_dim)
         _init_output_layer(self.output_layer)
+        self.to(DEVICE)
 
     def forward(self, x, action):
         x = _forward_with_action(self.layers, x, action)

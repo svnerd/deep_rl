@@ -7,11 +7,11 @@ class ScoreTracker:
         self.scores_window = deque(maxlen=window_len)  # last 100 scores
         self.good_target = good_target
 
-    def score_tracking(self, episode, score):
+    def score_tracking(self, episode, score, report_frequency=100):
         self.scores_window.append(score)
         mean_score = np.mean(self.scores_window)
-        print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score), end="")
-        if episode % 100 == 0:
+        print('\rEpisode {}\tAverage Score: {:.2f}\tThis Score: {:.2f}'.format(episode, mean_score, score), end="")
+        if episode % report_frequency == 0:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score))
         if self.is_good():
             print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode, mean_score))

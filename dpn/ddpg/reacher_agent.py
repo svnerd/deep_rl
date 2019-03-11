@@ -1,14 +1,15 @@
 from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
 from drl.framework.buffer import ExperienceMemory
 from drl.util.noise import OUNoise
-
+from drl.dpn.ddpg.model import Actor, Critic
 import torch.nn.functional as F
 import torch
 import numpy as np
 
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
-DISCOUNT_RATE = 1.0
+DISCOUNT_RATE = 0.99
+TAU = 1E-3
 
 def _make_actor_critic_net(env):
     actor_net =  FCNetOutputLayer(
@@ -21,6 +22,14 @@ def _make_actor_critic_net(env):
     )
     return actor_net, critic_net
 
+def _make_actor_critic_net_udacity(env):
+    actor_net =  Actor(state_size=env.obs_dim,
+                       action_size=env.act_dim,
+                       seed=15, fc1_units=100, fc2_units=50)
+    critic_net = Critic(
+        state_size=env.obs_dim, action_size=env.act_dim, seed=16, fcs1_units=100, fc2_units=50
+    )
+    return actor_net, critic_net
 
 def _soft_update(target_net, local_net, tau=1.0):
     for target_param, local_param in zip(target_net.parameters(), local_net.parameters()):
@@ -29,8 +38,8 @@ def _soft_update(target_net, local_net, tau=1.0):
 
 class ReacherAgent:
     def __init__(self, reacher_env, dim_tensor_maker, batch_size):
-        self.actor_net, self.critic_net = _make_actor_critic_net(reacher_env)
-        self.actor_target, self.critic_target = _make_actor_critic_net(reacher_env)
+        self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env)
+        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env)
         _soft_update(self.actor_target, self.actor_net)
         _soft_update(self.critic_net, self.critic_target)
         self.env = reacher_env
@@ -45,7 +54,8 @@ class ReacherAgent:
         action_t = self.actor_net.forward(obs)
         self.dtm.check_agent_out(action_t)
         actions = self.dtm.agent_out_to_np(action_t)
-        actions += np.array([n.sample() for n in self.noise])
+        noise_explore = np.array([n.sample() for n in self.noise])
+        actions += noise_explore
         return np.clip(actions, -1, 1)
 
     def update(self, states, actions, next_states, rewards, dones):
@@ -74,7 +84,7 @@ class ReacherAgent:
         critic_loss = F.mse_loss(q_local_t, q_target_t)
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 0.1)
+        torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 1)
         self.critic_optimizer.step()
 
         # ----- according to the paper, the critic networks' deriv is to be used to update actor network
@@ -82,7 +92,7 @@ class ReacherAgent:
         actor_loss = -self.critic_net.forward(b_states_t, actions_t).mean()
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.actor_net.parameters(), 0.1)
+        #torch.nn.utils.clip_grad_norm_(self.actor_net.parameters(), 0.1)
         self.actor_optimizer.step()
-        _soft_update(self.actor_target, self.actor_net, tau=0.1)
-        _soft_update(self.critic_target, self.critic_net, tau=0.1)
+        _soft_update(self.actor_target, self.actor_net, tau=TAU)
+        _soft_update(self.critic_target, self.critic_net, tau=TAU)

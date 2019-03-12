@@ -1,5 +1,7 @@
 from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
 from drl.framework.buffer import ExperienceMemory
+from drl.framework.buffer import ReplayBuffer
+
 from drl.util.noise import OUNoise
 from drl.dpn.ddpg.model import Actor, Critic
 import torch.nn.functional as F
@@ -49,6 +51,7 @@ class ReacherAgent:
         self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=1e-3)
         self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=1e-4)
         self.noise = [OUNoise(reacher_env.act_dim)] * reacher_env.num_agents
+        self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
 
     def act(self, obs):
         action_t = self.actor_net.forward(obs)
@@ -62,12 +65,19 @@ class ReacherAgent:
         # ----- establish critic baseline --------
 
         for s, a, ns, r, d in zip(*[states, actions, next_states, rewards, dones]):
-            self.memory.add([s, a, ns, r, d])
+            #self.memory.add([s, a, ns, r, d])
+            self.memory.add(s, a, r, ns, d)
 
-        experiences = self.memory.sample(self.batch_size)
-        if experiences is None:
+        if (len(self.memory) < self.batch_size):
             return
-        b_states, b_action, b_next_states, b_rewards, b_dones = experiences
+
+        experiences = self.memory.sample()
+        b_states, b_action, b_rewards, b_next_states, b_dones = experiences
+
+        #experiences = self.memory.sample(self.batch_size)
+        #if experiences is None:
+        #    return
+        #b_states, b_action, b_next_states, b_rewards, b_dones = experiences
 
         # ----- establish critic baseline --------
         b_next_states_t = self.dtm.agent_in(obs=b_next_states)

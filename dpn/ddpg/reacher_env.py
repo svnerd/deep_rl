@@ -9,7 +9,8 @@ class ReacherEnv:
             )
         elif os == 'mac':
             env = UnityEnvironment(
-                file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher'
+                file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher',
+                no_graphics=True
             )
         else:
             raise Exception("failed to find env.")

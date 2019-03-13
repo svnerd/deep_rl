@@ -2,7 +2,7 @@ from unityagents import UnityEnvironment
 import numpy as np
 
 class ReacherEnv:
-    def __init__(self, os='linux'):
+    def __init__(self, os='linux', display=False):
         if os == 'linux':
             env = UnityEnvironment(
                 file_name='/home/seiya/projects/reinforce/drl/dpn/ddpg/Reacher_Linux/Reacher.x86_64'
@@ -10,7 +10,7 @@ class ReacherEnv:
         elif os == 'mac':
             env = UnityEnvironment(
                 file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher',
-                no_graphics=True
+                no_graphics=(not display)
             )
         else:
             raise Exception("failed to find env.")

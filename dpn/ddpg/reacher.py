@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 BATCH_SIZE=128
 
-env = ReacherEnv(os=args.os)
+env = ReacherEnv(os=args.os, display=args.graph)
 dim_tensor_maker = SingleAgentDimTensorMaker(
     batch_size=BATCH_SIZE,
     num_env=env.num_agents,

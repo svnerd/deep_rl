@@ -5,7 +5,8 @@ class ReacherEnv:
     def __init__(self, os='linux', display=False):
         if os == 'linux':
             env = UnityEnvironment(
-                file_name='/home/seiya/projects/reinforce/drl/dpn/ddpg/Reacher_Linux/Reacher.x86_64'
+                file_name='/home/seiya/projects/reinforce/drl/dpn/ddpg/Reacher_Linux/Reacher.x86_64',
+                no_graphics=(not display)
             )
         elif os == 'mac':
             env = UnityEnvironment(

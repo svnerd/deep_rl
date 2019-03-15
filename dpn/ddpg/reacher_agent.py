@@ -4,7 +4,7 @@ from drl.dpn.ddpg.replay_buffer import ReplayBuffer
 from drl.util.noise import OUNoise
 from drl.dpn.ddpg.model import Actor, Critic
 import torch.nn.functional as F
-import torch
+import torch, random
 import numpy as np
 
 
@@ -23,14 +23,14 @@ def _make_actor_critic_net(env):
     )
     return actor_net, critic_net
 
-def _make_actor_critic_net_udacity(env):
+def _make_actor_critic_net_udacity(env, random_seed):
     actor_net =  Actor(state_size=env.obs_dim,
                        action_size=env.act_dim,
-                       seed=15, fc1_units=256,
+                       seed=random_seed, fc1_units=256,
                        fc2_units=128)
     critic_net = Critic(
         state_size=env.obs_dim,
-        action_size=env.act_dim, seed=16,
+        action_size=env.act_dim, seed=random_seed,
         fcs1_units=256, fc2_units=128
     )
     return actor_net, critic_net
@@ -41,11 +41,13 @@ def _soft_update(target_net, local_net, tau=1.0):
 
 
 class ReacherAgent:
-    def __init__(self, reacher_env, dim_tensor_maker, batch_size):
-        self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env)
-        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env)
+    def __init__(self, reacher_env, dim_tensor_maker, batch_size, random_seed):
+        self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env, random_seed)
+        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env, random_seed)
         _soft_update(self.actor_target, self.actor_net)
         _soft_update(self.critic_target, self.critic_net)
+        self.seed = random.seed(random_seed)
+
         self.env = reacher_env
         self.batch_size = batch_size
         #self.memory = ExperienceMemory(BUFFER_SIZE)

@@ -26,12 +26,12 @@ def _make_actor_critic_net(env):
 def _make_actor_critic_net_udacity(env, random_seed):
     actor_net =  Actor(state_size=env.obs_dim,
                        action_size=env.act_dim,
-                       seed=random_seed, fc1_units=256,
-                       fc2_units=128)
+                       seed=random_seed, fc1_units=400,
+                       fc2_units=300)
     critic_net = Critic(
         state_size=env.obs_dim,
         action_size=env.act_dim, seed=random_seed,
-        fcs1_units=256, fc2_units=128
+        fcs1_units=400, fc2_units=300
     )
     return actor_net, critic_net
 

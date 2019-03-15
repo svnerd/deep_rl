@@ -78,7 +78,7 @@ class ReacherAgent:
         if (len(self.memory) < self.batch_size):
             return
 
-        tmp = self.memory.sample(self.batch_size)
+        tmp = self.memory.sample()
 
         b_states, b_action, b_rewards, b_next_states, b_dones = tmp
 

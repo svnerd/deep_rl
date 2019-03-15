@@ -42,11 +42,11 @@ def _soft_update(target_net, local_net, tau=1.0):
 
 class ReacherAgent:
     def __init__(self, reacher_env, dim_tensor_maker, batch_size, random_seed):
+        self.seed = random.seed(random_seed)
         self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env, random_seed)
         self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env, random_seed)
         _soft_update(self.actor_target, self.actor_net)
         _soft_update(self.critic_target, self.critic_net)
-        self.seed = random.seed(random_seed)
 
         self.env = reacher_env
         self.batch_size = batch_size

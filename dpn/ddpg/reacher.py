@@ -35,7 +35,9 @@ for e in range(200):
     while True:
         # all actions between -1 and 1
         actions = agent_bad.act(dim_tensor_maker.agent_in(obs=states))
+        print("bad action", actions)
         actions = agent_good.act(states)
+        print("good action", actions)
         next_states, rewards, dones = env.step(actions)
         dim_tensor_maker.check_env_out(
             next_states, rewards, dones

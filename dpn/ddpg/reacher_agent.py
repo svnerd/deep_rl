@@ -1,6 +1,6 @@
 from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
 from drl.framework.buffer import ExperienceMemory
-from drl.framework.buffer import ReplayBuffer
+from drl.dpn.ddpg.replay_buffer import ReplayBuffer
 
 from drl.util.noise import OUNoise
 from drl.dpn.ddpg.model import Actor, Critic

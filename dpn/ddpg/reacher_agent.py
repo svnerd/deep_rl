@@ -27,11 +27,12 @@ def _make_actor_critic_net(env):
 def _make_actor_critic_net_udacity(env):
     actor_net =  Actor(state_size=env.obs_dim,
                        action_size=env.act_dim,
-                       seed=15, fc1_units=400, fc2_units=300)
+                       seed=15, fc1_units=256,
+                       fc2_units=128)
     critic_net = Critic(
         state_size=env.obs_dim,
         action_size=env.act_dim, seed=16,
-        fcs1_units=400, fc2_units=300
+        fcs1_units=256, fc2_units=128
     )
     return actor_net, critic_net
 
@@ -50,11 +51,9 @@ class ReacherAgent:
         self.batch_size = batch_size
         #self.memory = ExperienceMemory(BUFFER_SIZE)
         self.dtm = dim_tensor_maker
-        self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=5e-3)
-        self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=5e-4)
+        self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=1e-4)
+        self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=1e-4)
         self.noise = [OUNoise(reacher_env.act_dim)] * reacher_env.num_agents
-        self.memory_0 = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
-        self.memory_1 = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
         self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
 
     def act(self, obs):
@@ -74,23 +73,12 @@ class ReacherAgent:
 
         for s, a, ns, r, d in zip(*[states, actions, next_states, rewards, dones]):
             #self.memory.add([s, a, ns, r, d])
-            if r > 0:
-                self.memory_1.add(s, a, r, ns, d)
-            else:
-                self.memory_0.add(s, a, r, ns, d)
             self.memory.add(s, a, r, ns, d)
 
         if (len(self.memory) < self.batch_size):
             return
 
-        if (len(self.memory_1) >= self.batch_size/10 and len(self.memory_0) >= self.batch_size):
-            experiences_1 = self.memory_1.sample(int(self.batch_size/10))
-            experiences_0 = self.memory_0.sample(self.batch_size - int(self.batch_size/10))
-            tmp = []
-            for a, b in zip(experiences_0, experiences_1):
-                tmp.append(torch.cat([a, b], 0))
-        else:
-            tmp = self.memory.sample(self.batch_size)
+        tmp = self.memory.sample(self.batch_size)
 
         b_states, b_action, b_rewards, b_next_states, b_dones = tmp
 

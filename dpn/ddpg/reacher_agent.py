@@ -11,7 +11,7 @@ import numpy as np
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 DISCOUNT_RATE = 0.99
-TAU = 1E-2
+TAU = 1e-3              # for soft update of target parameters
 
 def _make_actor_critic_net(env):
     actor_net =  FCNetOutputLayer(

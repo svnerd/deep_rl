@@ -11,7 +11,7 @@ import numpy as np
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 DISCOUNT_RATE = 0.99
-TAU = 1E-3
+TAU = 1E-2
 
 def _make_actor_critic_net(env):
     actor_net =  FCNetOutputLayer(
@@ -29,13 +29,15 @@ def _make_actor_critic_net_udacity(env):
                        action_size=env.act_dim,
                        seed=15, fc1_units=400, fc2_units=300)
     critic_net = Critic(
-        state_size=env.obs_dim, action_size=env.act_dim, seed=16, fcs1_units=400, fc2_units=300
+        state_size=env.obs_dim,
+        action_size=env.act_dim, seed=16,
+        fcs1_units=400, fc2_units=300
     )
     return actor_net, critic_net
 
 def _soft_update(target_net, local_net, tau=1.0):
     for target_param, local_param in zip(target_net.parameters(), local_net.parameters()):
-        target_param.data.copy_(tau * local_param + (1.0-tau) * target_param)
+        target_param.data.copy_(tau * local_param.data + (1.0-tau) * target_param.data)
 
 
 class ReacherAgent:
@@ -46,11 +48,13 @@ class ReacherAgent:
         _soft_update(self.critic_net, self.critic_target)
         self.env = reacher_env
         self.batch_size = batch_size
-        self.memory = ExperienceMemory(BUFFER_SIZE)
+        #self.memory = ExperienceMemory(BUFFER_SIZE)
         self.dtm = dim_tensor_maker
-        self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=1e-3)
-        self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=1e-4)
+        self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=5e-3)
+        self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=5e-4)
         self.noise = [OUNoise(reacher_env.act_dim)] * reacher_env.num_agents
+        self.memory_0 = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
+        self.memory_1 = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
         self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=15)
 
     def act(self, obs):
@@ -61,18 +65,34 @@ class ReacherAgent:
         actions += noise_explore
         return np.clip(actions, -1, 1)
 
+    def reset(self):
+        for n in self.noise:
+            n.reset()
+
     def update(self, states, actions, next_states, rewards, dones):
         # ----- establish critic baseline --------
 
         for s, a, ns, r, d in zip(*[states, actions, next_states, rewards, dones]):
             #self.memory.add([s, a, ns, r, d])
+            if r > 0:
+                self.memory_1.add(s, a, r, ns, d)
+            else:
+                self.memory_0.add(s, a, r, ns, d)
             self.memory.add(s, a, r, ns, d)
 
         if (len(self.memory) < self.batch_size):
             return
 
-        experiences = self.memory.sample()
-        b_states, b_action, b_rewards, b_next_states, b_dones = experiences
+        if (len(self.memory_1) >= self.batch_size/10 and len(self.memory_0) >= self.batch_size):
+            experiences_1 = self.memory_1.sample(int(self.batch_size/10))
+            experiences_0 = self.memory_0.sample(self.batch_size - int(self.batch_size/10))
+            tmp = []
+            for a, b in zip(experiences_0, experiences_1):
+                tmp.append(torch.cat([a, b], 0))
+        else:
+            tmp = self.memory.sample(self.batch_size)
+
+        b_states, b_action, b_rewards, b_next_states, b_dones = tmp
 
         #experiences = self.memory.sample(self.batch_size)
         #if experiences is None:
@@ -104,5 +124,6 @@ class ReacherAgent:
         actor_loss.backward()
         #torch.nn.utils.clip_grad_norm_(self.actor_net.parameters(), 0.1)
         self.actor_optimizer.step()
+
         _soft_update(self.actor_target, self.actor_net, tau=TAU)
         _soft_update(self.critic_target, self.critic_net, tau=TAU)

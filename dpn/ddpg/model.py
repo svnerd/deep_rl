@@ -1,9 +1,16 @@
+"""
+Example Neural Network Model for Vector Observation DDPG (Actor-Critic) Agent
+DDPG Model for Unity ML-Agents Environments using PyTorch
+
+Project for Udacity Danaodgree in Deep Reinforcement Learning (DRL)
+Code expanded and adapted from code examples provided by Udacity DRL Team, 2018.
+"""
+
 import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from drl.util.device import DEVICE
 
 def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
@@ -13,7 +20,7 @@ def hidden_init(layer):
 class Actor(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, seed, fc1_units=400, fc2_units=300):
+    def __init__(self, state_size, action_size, seed, fc1_units=256, fc2_units=128):
         """Initialize parameters and build model.
         Params
         ======
@@ -29,7 +36,6 @@ class Actor(nn.Module):
         self.fc2 = nn.Linear(fc1_units, fc2_units)
         self.fc3 = nn.Linear(fc2_units, action_size)
         self.reset_parameters()
-        self.to(DEVICE)
 
     def reset_parameters(self):
         self.fc1.weight.data.uniform_(*hidden_init(self.fc1))
@@ -40,13 +46,13 @@ class Actor(nn.Module):
         """Build an actor (policy) network that maps states -> actions."""
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        return F.tanh(self.fc3(x))
+        return torch.tanh(self.fc3(x))
 
 
 class Critic(nn.Module):
     """Critic (Value) Model."""
 
-    def __init__(self, state_size, action_size, seed, fcs1_units=400, fc2_units=300):
+    def __init__(self, state_size, action_size, seed, fcs1_units=256, fc2_units=128):
         """Initialize parameters and build model.
         Params
         ======
@@ -62,7 +68,6 @@ class Critic(nn.Module):
         self.fc2 = nn.Linear(fcs1_units+action_size, fc2_units)
         self.fc3 = nn.Linear(fc2_units, 1)
         self.reset_parameters()
-        self.to(DEVICE)
 
     def reset_parameters(self):
         self.fcs1.weight.data.uniform_(*hidden_init(self.fcs1))

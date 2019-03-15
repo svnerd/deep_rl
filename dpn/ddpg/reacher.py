@@ -31,7 +31,7 @@ score_tracker = ScoreTracker(good_target=100, window_len=100)
 for e in range(200):
     states, r, dones = env.reset()
     scores = np.zeros(env.num_agents)
-
+    agent.reset()
     while True:
         # all actions between -1 and 1
         if args.udacity:

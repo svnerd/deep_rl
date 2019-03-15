@@ -93,7 +93,7 @@ class ReacherAgent:
         self.dtm.check_agent_out(a_next_t)
         q_next_t = self.critic_target.forward(b_next_states_t, a_next_t)
         q_target_t = self.dtm.rewards_dones_to_tensor(rewards) + DISCOUNT_RATE * self.dtm.rewards_dones_to_tensor(1-dones) * q_next_t
-        q_target_t.detach()
+        #q_target_t.detach()
 
         # ----- optimize away critic loss ---------
         b_states_t = self.dtm.agent_in(obs=b_states)
@@ -102,7 +102,7 @@ class ReacherAgent:
         critic_loss = F.mse_loss(q_local_t, q_target_t)
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 1)
+        #torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 1)
         self.critic_optimizer.step()
 
         # ----- according to the paper, the critic networks' deriv is to be used to update actor network

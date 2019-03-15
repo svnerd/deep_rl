@@ -1,5 +1,4 @@
 from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
-from drl.framework.buffer import ExperienceMemory
 from drl.dpn.ddpg.replay_buffer import ReplayBuffer
 
 from drl.util.noise import OUNoise
@@ -38,7 +37,7 @@ def _make_actor_critic_net_udacity(env):
 
 def _soft_update(target_net, local_net, tau=1.0):
     for target_param, local_param in zip(target_net.parameters(), local_net.parameters()):
-        target_param.data.copy_(tau * local_param.data + (1.0-tau) * target_param.data)
+        target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
 
 class ReacherAgent:
@@ -46,7 +45,7 @@ class ReacherAgent:
         self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env)
         self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env)
         _soft_update(self.actor_target, self.actor_net)
-        _soft_update(self.critic_net, self.critic_target)
+        _soft_update(self.critic_target, self.critic_net)
         self.env = reacher_env
         self.batch_size = batch_size
         #self.memory = ExperienceMemory(BUFFER_SIZE)

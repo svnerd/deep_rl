@@ -26,6 +26,20 @@ WEIGHT_DECAY = 0.0      # L2 weight decay
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
+def _make_actor_critic_net_udacity(obs_dim, act_dim, random_seed):
+    actor_net =  Actor(state_size=obs_dim,
+                       action_size=act_dim,
+                       seed=random_seed, fc1_units=400,
+                       fc2_units=300).to(device)
+    critic_net = Critic(
+        state_size=obs_dim,
+        action_size=act_dim, seed=random_seed,
+        fcs1_units=400, fc2_units=300
+    ).to(device)
+    return actor_net, critic_net
+
+
 class Agent():
     """Interacts with and learns from the environment."""
     
@@ -43,14 +57,16 @@ class Agent():
         self.num_agents = num_agents
         self.seed = random.seed(random_seed)
 
+        self.actor_local, self.critic_local = _make_actor_critic_net_udacity(state_size, action_size, random_seed)
+        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(state_size, action_size, random_seed)
         # Actor Network (w/ Target Network)
-        self.actor_local = Actor(state_size, action_size, random_seed).to(device)
-        self.actor_target = Actor(state_size, action_size, random_seed).to(device)
+        #self.actor_local = Actor(state_size, action_size, random_seed).to(device)
+        #self.actor_target = Actor(state_size, action_size, random_seed).to(device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=LR_ACTOR)
 
         # Critic Network (w/ Target Network)
-        self.critic_local = Critic(state_size, action_size, random_seed).to(device)
-        self.critic_target = Critic(state_size, action_size, random_seed).to(device)
+        #self.critic_local = Critic(state_size, action_size, random_seed).to(device)
+        #self.critic_target = Critic(state_size, action_size, random_seed).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
         # Noise process for each agent

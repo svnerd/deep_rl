@@ -1,4 +1,4 @@
-
+import sys
 import numpy as np
 from collections import deque
 
@@ -10,7 +10,8 @@ class ScoreTracker:
     def score_tracking(self, episode, score, report_frequency=100):
         self.scores_window.append(score)
         mean_score = np.mean(self.scores_window)
-        print('\rEpisode {}\tAverage Score: {:.2f}\tThis Score: {:.2f}'.format(episode, mean_score, score), end="")
+        print('Episode {}\tAverage Score: {:.2f}\tThis Score: {:.2f}'.format(episode, mean_score, score), end="\n")
+        sys.stdout.flush()
         if episode % report_frequency == 0:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score))
         if self.is_good():

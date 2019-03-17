@@ -54,7 +54,7 @@ args = parser.parse_args()
 
 env = ReacherEnv(os=args.os, display=args.graph)
 
-agent = Agent(state_size=env.obs_dim, action_size=env.act_dim, num_agents=1, random_seed=0)
+agent = Agent(state_size=env.obs_dim, action_size=env.act_dim, num_agents=env.num_agents, random_seed=0)
 
 
 """

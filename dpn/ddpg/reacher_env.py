@@ -10,7 +10,7 @@ class ReacherEnv:
             )
         elif os == 'mac':
             env = UnityEnvironment(
-                file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher',
+                file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher_28',
                 no_graphics=(not display)
             )
         else:

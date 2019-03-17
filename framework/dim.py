@@ -29,9 +29,9 @@ class SingleAgentDimTensorMaker:
         return act
 
     def rewards_dones_to_tensor(self, rd):
-        assert len(rd.shape) == 1
-        assert rd.shape[0] == self.num_env or rd.shape[0] == self.batch_size
-        return tensor_float(rd)
+        rd_t = tensor_float(rd)
+        assert rd_t.shape[0] == self.num_env or rd_t.shape[0] == self.batch_size
+        return rd_t
 
     def check_env_out(self, obs, rewards, dones):
         assert isinstance(obs, np.ndarray)

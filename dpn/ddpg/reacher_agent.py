@@ -164,7 +164,6 @@ class ReacherAgent:
             self.memory.add(states[agent,:], actions[agent,:], rewards[agent], next_states[agent,:], dones[agent])
 
         # Learn, if enough samples are available in memory
-        if len(self.memory) < self.batch_size:
-            return
-        experiences = self.memory.sample()
-        self.learn_my(experiences)
+        if len(self.memory) > self.batch_size:
+            experiences = self.memory.sample()
+            self.learn(experiences)

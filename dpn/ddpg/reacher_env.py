@@ -27,9 +27,9 @@ class ReacherEnv:
         self.brain_name = brain_name
 
     def __get_obs_r_d(self, env_info):
-        return (env_info.vector_observations), \
-               (env_info.rewards), \
-               (env_info.local_done)
+        return np.array(env_info.vector_observations), \
+               np.array(env_info.rewards), \
+               np.array(env_info.local_done)
 
     def reset(self):
         return self.__get_obs_r_d(self.env.reset(train_mode=True)[self.brain_name])

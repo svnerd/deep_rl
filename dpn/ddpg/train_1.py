@@ -43,7 +43,8 @@ solved_score = 30
 STEP 2: Start the Unity Environment
 # Use the corresponding call depending on your operating system 
 """
-env = UnityEnvironment(file_name="Reacher.app")
+env = UnityEnvironment(file_name='/Users/chenyuan/project/ipython/drl/dpn/ddpg/Reacher_28',
+                       no_graphics=True)
 # - **Mac**: "Banana_Mac/Reacher.app"
 # - **Windows** (x86): "Reacher_Windows_x86/Reacher.exe"
 # - **Windows** (x86_64): "Reacher_Windows_x86_64/Reacher.exe"

@@ -29,14 +29,14 @@ def _make_actor_critic_net(env):
     )
     return actor_net, critic_net
 
-def _make_actor_critic_net_udacity(env, random_seed):
+def _make_actor_critic_net_udacity(env):
     actor_net =  Actor(state_size=env.obs_dim,
                        action_size=env.act_dim,
-                       seed=random_seed, fc1_units=FC1,
+                       fc1_units=FC1,
                        fc2_units=FC2)
     critic_net = Critic(
         state_size=env.obs_dim,
-        action_size=env.act_dim, seed=random_seed,
+        action_size=env.act_dim,
         fcs1_units=FC1, fc2_units=128
     )
     return actor_net, critic_net
@@ -47,10 +47,9 @@ def _soft_update(target_net, local_net, tau=1.0):
 
 
 class ReacherAgent:
-    def __init__(self, reacher_env, dim_tensor_maker, batch_size, random_seed):
-        self.seed = random.seed(random_seed)
-        self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env, random_seed)
-        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env, random_seed)
+    def __init__(self, reacher_env, dim_tensor_maker, batch_size):
+        self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env)
+        self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env)
         _soft_update(self.actor_target, self.actor_net)
         _soft_update(self.critic_target, self.critic_net)
 
@@ -60,8 +59,8 @@ class ReacherAgent:
         self.dtm = dim_tensor_maker
         self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
         self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=LR_ACTOR)
-        self.noise = OUNoise((reacher_env.num_agents, reacher_env.act_dim), random_seed)
-        self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size, seed=random_seed)
+        self.noise = OUNoise((reacher_env.num_agents, reacher_env.act_dim))
+        self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size)
 
     def act(self, obs):
         self.actor_net.eval()

@@ -18,12 +18,15 @@ Code Expanded and Adapted from Code provided by Udacity DRL Team, 2018.
 ###################################
 # Import Required Packages
 import torch
-import random
+import random, torch
 import numpy as np
 from collections import deque
 from drl.dpn.ddpg.ddpg_agent import Agent
 from unityagents import UnityEnvironment
 from drl.dpn.ddpg.reacher_env import ReacherEnv
+random.seed(100)
+np.random.seed(100)
+torch.manual_seed(100)
 
 """
 ###################################
@@ -54,7 +57,7 @@ args = parser.parse_args()
 
 env = ReacherEnv(os=args.os, display=args.graph)
 
-agent = Agent(state_size=env.obs_dim, action_size=env.act_dim, num_agents=env.num_agents, random_seed=0)
+agent = Agent(state_size=env.obs_dim, action_size=env.act_dim, num_agents=env.num_agents)
 
 
 """

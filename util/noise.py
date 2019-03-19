@@ -12,7 +12,7 @@ class OUNoise:
         self.sigma = sigma
         self.sigma_min = sigma_min
         self.sigma_decay = sigma_decay
-        self.seed = random.seed(seed)
+        #self.seed = random.seed(seed)
         self.size = size
         self.reset()
 

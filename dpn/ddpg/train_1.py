@@ -21,7 +21,7 @@ import torch
 import random
 import numpy as np
 from collections import deque
-from ddpg_agent import Agent
+from .ddpg_agent import Agent
 from unityagents import UnityEnvironment
 
 """

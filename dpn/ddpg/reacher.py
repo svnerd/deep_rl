@@ -2,6 +2,7 @@ from drl.dpn.ddpg.reacher_env import ReacherEnv
 from drl.dpn.ddpg.reacher_agent import ReacherAgent
 from drl.framework.dim import SingleAgentDimTensorMaker
 from drl.util.score_tracker import ScoreTracker
+from drl.util.device import DEVICE
 from drl.dpn.ddpg.ddpg_agent import Agent
 import random, torch
 import numpy as np
@@ -34,7 +35,8 @@ for e in range(200):
     scores = np.zeros(env.num_agents)
     agent_bad.reset()
     while True:
-        actions = agent_bad.act(dim_tensor_maker.agent_in(obs=states))
+        state_t = torch.from_numpy(states).float().to(DEVICE)
+        actions = agent_bad.act(state_t)
         next_states, rewards, dones = env.step(actions)
         dim_tensor_maker.check_env_out(
             next_states, rewards, dones

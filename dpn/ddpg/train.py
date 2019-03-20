@@ -3,7 +3,7 @@ import random
 import numpy as np
 from drl.dpn.ddpg.reacher_env import ReacherEnv
 from .ddpg_agent import Agent
-from unityagents import UnityEnvironment
+BATCH_SIZE=128
 
 num_episodes=500
 episode_scores = []
@@ -75,22 +75,13 @@ for i_episode in range(1, num_episodes+1):
 
 	# reset the training agent for new episode
     agent.reset()
-
     # set the initial episode score to zero.
     agent_scores = np.zeros(env.num_agents)
-
-    # Run the episode training loop;
-    # At each loop step take an action as a function of the current state observations
-    # Based on the resultant environmental state (next_state) and reward received update the Agents Actor and Critic networks
-    # If environment episode is done, exit loop...
-    # Otherwise repeat until done == true 
     while True:
         # determine actions for the unity agents from current sate
         actions = agent.act(states)
-
         # send the actions to the unity agents in the environment and receive resultant environment information
         next_states, rewards, dones = env.step(actions)
-
         #Send (S, A, R, S') info to the training agent for replay buffer (memory) and network updates
         agent.step(states, actions, rewards, next_states, dones)
 

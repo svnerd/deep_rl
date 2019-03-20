@@ -5,14 +5,14 @@ import copy, random
 class OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed=15, mu=0.0, theta=0.15, sigma=0.15, sigma_min = 0.05, sigma_decay=.975):
+    def __init__(self, size, mu=0.0, theta=0.15, sigma=0.15, sigma_min = 0.05, sigma_decay=.975):
         """Initialize parameters and noise process."""
         self.mu = mu * np.ones(size)
         self.theta = theta
         self.sigma = sigma
         self.sigma_min = sigma_min
+        self.seed = np.random.seed(100)
         self.sigma_decay = sigma_decay
-        #self.seed = random.seed(seed)
         self.size = size
         self.reset()
 

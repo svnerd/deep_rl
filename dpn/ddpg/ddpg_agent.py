@@ -113,7 +113,6 @@ class Agent():
         critic_loss.backward()
         #torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
-
         # ---------------------------- update actor ---------------------------- #
         # Compute actor loss
         actions_pred = self.actor_local(states)
@@ -125,7 +124,7 @@ class Agent():
 
         # ----------------------- update target networks ----------------------- #
         self.soft_update(self.critic_local, self.critic_target, TAU)
-        self.soft_update(self.actor_local, self.actor_target, TAU)                     
+        self.soft_update(self.actor_local, self.actor_target, TAU)
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -149,6 +148,7 @@ class OUNoise:
         self.theta = theta
         self.sigma = sigma
         self.sigma_min = sigma_min
+        self.seed = np.random.seed(100)
         self.sigma_decay = sigma_decay
         self.size = size
         self.reset()

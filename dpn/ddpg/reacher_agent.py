@@ -2,6 +2,7 @@ from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
 from drl.dpn.ddpg.replay_buffer import ReplayBuffer
 
 from drl.util.noise import OUNoise
+from drl.util.device import DEVICE
 from drl.dpn.ddpg.model import Actor, Critic
 import torch.nn.functional as F
 import torch, random
@@ -31,13 +32,10 @@ def _make_actor_critic_net(env):
 
 def _make_actor_critic_net_udacity(env):
     actor_net =  Actor(state_size=env.obs_dim,
-                       action_size=env.act_dim,
-                       fc1_units=FC1,
-                       fc2_units=FC2)
+                       action_size=env.act_dim)
     critic_net = Critic(
         state_size=env.obs_dim,
-        action_size=env.act_dim,
-        fcs1_units=FC1, fc2_units=128
+        action_size=env.act_dim
     )
     return actor_net, critic_net
 
@@ -50,8 +48,8 @@ class ReacherAgent:
     def __init__(self, reacher_env, dim_tensor_maker, batch_size):
         self.actor_net, self.critic_net = _make_actor_critic_net_udacity(reacher_env)
         self.actor_target, self.critic_target = _make_actor_critic_net_udacity(reacher_env)
-        _soft_update(self.actor_target, self.actor_net)
-        _soft_update(self.critic_target, self.critic_net)
+        #_soft_update(self.actor_target, self.actor_net)
+        #_soft_update(self.critic_target, self.critic_net)
 
         self.env = reacher_env
         self.batch_size = batch_size
@@ -63,12 +61,14 @@ class ReacherAgent:
         self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size)
 
     def act(self, obs):
+        num_agents = self.env.num_agents
+        action_size = self.env.act_dim
+        actions = np.zeros((num_agents, action_size))
         self.actor_net.eval()
         with torch.no_grad():
-            action_t = self.actor_net.forward(obs)
+            for agent in range(num_agents):
+                actions[agent,:] = self.actor_net(obs[agent,:]).cpu().data.numpy()
         self.actor_net.train()
-        self.dtm.check_agent_out(action_t)
-        actions = self.dtm.agent_out_to_np(action_t)
         actions += self.noise.sample()
         return np.clip(actions, -1, 1)
 
@@ -104,8 +104,7 @@ class ReacherAgent:
         critic_loss.backward()
         #torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
-
-        # ---------------------------- update actor ---------------------------- #
+    # ---------------------------- update actor ---------------------------- #
         # Compute actor loss
         actions_pred = self.actor_net(states)
         actor_loss = -self.critic_net(states, actions_pred).mean()

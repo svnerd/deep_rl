@@ -29,4 +29,4 @@ def is_tensor(x):
 
 
 def to_np(t):
-    return t.cpu().detach().numpy()
+    return t.cpu().data.numpy()

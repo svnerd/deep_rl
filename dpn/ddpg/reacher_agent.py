@@ -66,9 +66,9 @@ class ReacherAgent:
         actions = np.zeros((num_agents, action_size))
         self.actor_net.eval()
         with torch.no_grad():
-            #for agent in range(num_agents):
-            #    actions[agent,:] = self.actor_net(obs[agent,:]).cpu().data.numpy()
-            actions = self.actor_net(obs).cpu().data.numpy()
+            for agent in range(num_agents):
+                actions[agent,:] = self.actor_net(obs[agent,:]).cpu().data.numpy()
+            #actions = self.actor_net(obs).cpu().data.numpy()
         self.actor_net.train()
         actions += self.noise.sample()
         return np.clip(actions, -1, 1)

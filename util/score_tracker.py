@@ -10,12 +10,12 @@ class ScoreTracker:
     def score_tracking(self, episode, score, report_frequency=100):
         self.scores_window.append(score)
         mean_score = np.mean(self.scores_window)
-        print('Episode {}\tAverage Score: {:.2f}\tThis Score: {:.2f}'.format(episode, mean_score, score), end="\n")
+        print('Episode {}\tAverage Score: {:.3f}\tThis Score: {:.3f}'.format(episode, mean_score, score), end="\n")
         sys.stdout.flush()
         if episode % report_frequency == 0:
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(episode, mean_score))
+            print('\rEpisode {}\tAverage Score: {:.3f}'.format(episode, mean_score))
         if self.is_good():
-            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode, mean_score))
+            print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.3f}'.format(episode, mean_score))
         if episode > 2000:
             exit(0)
 

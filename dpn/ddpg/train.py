@@ -3,6 +3,11 @@ import random
 import numpy as np
 from drl.dpn.ddpg.reacher_env import ReacherEnv
 from .ddpg_agent import Agent
+
+random.seed(100)
+np.random.seed(100)
+torch.manual_seed(100)
+
 BATCH_SIZE=128
 
 num_episodes=500
@@ -11,9 +16,6 @@ scores_average_window = 100
 solved_score = 30
 
 from argparse import ArgumentParser
-random.seed(100)
-np.random.seed(100)
-torch.manual_seed(100)
 
 parser = ArgumentParser()
 parser.add_argument("--os", default="linux", help="os")

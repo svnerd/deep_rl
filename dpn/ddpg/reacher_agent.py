@@ -31,8 +31,10 @@ def _make_actor_critic_net(env):
     return actor_net, critic_net
 
 def _make_actor_critic_net_udacity(env):
-    actor_net =  Actor(state_size=env.obs_dim,
-                       action_size=env.act_dim)
+    actor_net =  FCNetOutputLayer(
+        input_dim=env.obs_dim, hidden_units=[FC1, FC2],
+        output_dim=env.act_dim
+    )
     critic_net = Critic(
         state_size=env.obs_dim,
         action_size=env.act_dim

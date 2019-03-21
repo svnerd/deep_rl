@@ -10,16 +10,15 @@ the class object's parameters() function can recursively includes
 all modules' parameters(). 
 """
 
-
-def _hidden_init(layer, scale):
+def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
-    return (-lim * scale, lim * scale)
+    return (-lim, lim)
 
 
 def _init_layers(layers, scale=1.0):
     for layer in layers:
-        layer.weight.data.uniform_(*_hidden_init(layer, scale))
+        layer.weight.data.uniform_(*hidden_init(layer))
 
 
 def _init_output_layer(layer, scale=1.0):
@@ -51,14 +50,16 @@ class FCNet(nn.Module):
 class FCNetOutputLayer(nn.Module):
     def __init__(self, input_dim, hidden_units, output_dim):
         super(FCNetOutputLayer, self).__init__()
+        torch.manual_seed(100)
         self.layers = _make_hidden_layers(input_dim, hidden_units)
         self.output_layer = nn.Linear(hidden_units[-1], output_dim)
+        self.output_layer.weight.data.uniform_(-3e-3, 3e-3)
         self.to(DEVICE)
 
     def forward(self, x):
         for layers in self.layers:
             x = F.relu(layers(x))
-        return self.output_layer(x)
+        return torch.tanh(self.output_layer(x))
 
 
 def _make_hidden_layers_with_action_input(input_dim, action_dim, hidden_units):

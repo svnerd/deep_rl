@@ -2,12 +2,13 @@ from drl.dpn.ddpg.reacher_env import ReacherEnv
 from drl.dpn.ddpg.reacher_agent import ReacherAgent
 from drl.framework.dim import SingleAgentDimTensorMaker
 from drl.util.score_tracker import ScoreTracker
-from drl.util.device import DEVICE
-from drl.dpn.ddpg.ddpg_agent import Agent
+from drl.util.constant import RANDOM_SEED, BATCH_SIZE
+
 import random
 import numpy as np
 from argparse import ArgumentParser
 import torch
+
 
 parser = ArgumentParser()
 parser.add_argument("--os", default="linux", help="os")
@@ -15,11 +16,9 @@ parser.add_argument("--display", action="store_true")
 parser.add_argument("--good", action="store_true")
 args = parser.parse_args()
 
-BATCH_SIZE=128
-
-random.seed(100)
-np.random.seed(100)
-torch.manual_seed(100)
+random.seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
+torch.manual_seed(RANDOM_SEED)
 
 env = ReacherEnv(os=args.os, display=args.display)
 dim_tensor_maker = SingleAgentDimTensorMaker(

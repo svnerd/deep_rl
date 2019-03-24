@@ -1,5 +1,6 @@
+import copy
 import numpy as np
-import copy, random
+from drl.util.constant import RANDOM_SEED
 
 
 class OUNoise:
@@ -11,7 +12,7 @@ class OUNoise:
         self.theta = theta
         self.sigma = sigma
         self.sigma_min = sigma_min
-        self.seed = np.random.seed(100)
+        self.seed = np.random.seed(RANDOM_SEED)
         self.sigma_decay = sigma_decay
         self.size = size
         self.reset()

@@ -2,10 +2,10 @@ from drl.framework.network import FCNetOutputLayer, FCActInjected1NetOutputLayer
 from drl.dpn.ddpg.replay_buffer import ReplayBuffer
 
 from drl.util.noise import OUNoise
-from drl.util.device import DEVICE
+from drl.util.replay_buffer import ExperienceMemory
 from drl.dpn.ddpg.model import Actor, Critic
 import torch.nn.functional as F
-import torch, random
+import torch
 import numpy as np
 
 
@@ -20,20 +20,10 @@ FC1 = 256
 FC2 = 128
 
 def _make_actor_critic_net(env):
-    actor_net =  FCNetOutputLayer(
-        input_dim=env.obs_dim, hidden_units=[FC1, FC2],
-        output_dim=env.act_dim
-    )
-    critic_net = FCActInjected1NetOutputLayer(
-        input_dim=env.obs_dim, action_dim=env.act_dim,
-        hidden_units=[FC1, FC2], output_dim=1
-    )
-    return actor_net, critic_net
-
-def _make_actor_critic_net_udacity(env):
-    actor_net =  FCNetOutputLayer(
-        input_dim=env.obs_dim, hidden_units=[FC1, FC2],
-        output_dim=env.act_dim
+    actor_net =  Actor(
+        state_size=env.obs_dim,
+        action_size=env.act_dim,
+        fc1_units=FC1, fc2_units=FC2,
     )
     critic_net = Critic(
         state_size=env.obs_dim,
@@ -55,12 +45,12 @@ class ReacherAgent:
 
         self.env = reacher_env
         self.batch_size = batch_size
-        #self.memory = ExperienceMemory(BUFFER_SIZE)
         self.dtm = dim_tensor_maker
         self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
         self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=LR_ACTOR)
         self.noise = OUNoise((reacher_env.num_agents, reacher_env.act_dim))
-        self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size)
+        #self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size)
+        self.memory = ExperienceMemory(batch_size=batch_size, msize=BUFFER_SIZE)
 
     def act(self, obs):
         num_agents = self.env.num_agents
@@ -92,6 +82,11 @@ class ReacherAgent:
             gamma (float): discount factor
         """
         states, actions, rewards, next_states, dones = experiences
+        next_states = self.dtm.agent_in(obs=next_states)
+        rewards = self.dtm.rewards_dones_to_tensor(rewards)
+        dones = self.dtm.rewards_dones_to_tensor(dones)
+        states = self.dtm.agent_in(obs=states)
+        actions = self.dtm.actions_to_tensor(actions)
 
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models
@@ -119,30 +114,29 @@ class ReacherAgent:
         _soft_update(self.actor_target, self.actor_net, tau=TAU)
         _soft_update(self.critic_target, self.critic_net, tau=TAU)
 
-    def learn_my(self, experiences):
-
+    def learn_my(self):
+        experiences = self.memory.sample()
+        if experiences is None:
+            return
         b_states, b_action, b_rewards, b_next_states, b_dones = experiences
-        #experiences = self.memory.sample(self.batch_size)
-        #if experiences is None:
-        #    return
-        #b_states, b_action, b_next_states, b_rewards, b_dones = experiences
+        b_next_states_t = self.dtm.agent_in(obs=b_next_states)
+        b_rewards_t = self.dtm.rewards_dones_to_tensor(b_rewards)
+        b_dones_t = self.dtm.rewards_dones_to_tensor(b_dones)
+        b_states_t = self.dtm.agent_in(obs=b_states)
+        b_action_t = self.dtm.actions_to_tensor(b_action)
 
         # ----- establish critic baseline --------
-        #b_next_states_t = self.dtm.agent_in(obs=b_next_states)
-        a_next_t = self.actor_target.forward(b_next_states)
+        a_next_t = self.actor_target.forward(b_next_states_t)
         #self.dtm.check_agent_out(a_next_t)
-        q_next_t = self.critic_target.forward(b_next_states, a_next_t)
-        b_rewards_t = self.dtm.rewards_dones_to_tensor(b_rewards)
-        b_dones_t = self.dtm.rewards_dones_to_tensor(1-b_dones)
+        q_next_t = self.critic_target.forward(b_next_states_t, a_next_t)
         #print(b_rewards_t.shape, b_rewards.shape, b_dones_t.shape, b_dones.shape)
-        q_target_t = b_rewards_t + DISCOUNT_RATE * b_dones_t * q_next_t
+        q_target_t = b_rewards_t + DISCOUNT_RATE * (1-b_dones_t) * q_next_t
         #q_target_t.detach()
 
         # ----- optimize away critic loss ---------
-        b_states_t = self.dtm.agent_in(obs=b_states)
         #print(b_states.shape, b_states_t.shape)
         #self.dtm.agent_out_to_tensor
-        q_local_t = self.critic_net.forward(b_states_t, b_action)
+        q_local_t = self.critic_net.forward(b_states_t, b_action_t)
         self.dtm.check_agent_out(q_local_t)
         critic_loss = F.mse_loss(q_local_t, q_target_t)
         self.critic_optimizer.zero_grad()
@@ -166,5 +160,6 @@ class ReacherAgent:
 
         # Learn, if enough samples are available in memory
         if len(self.memory) > self.batch_size:
-            experiences = self.memory.sample()
-            self.learn(experiences)
+            self.learn_my()
+            #experiences = self.memory.sample()
+            #self.learn(experiences)

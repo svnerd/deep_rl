@@ -4,23 +4,31 @@ from collections import deque, namedtuple
 import random
 
 
-Experience = namedtuple("Experience", field_names=["prev_state", "action", "reward", "state", "done"])
+Experience = namedtuple("Experience", field_names=[
+    "state", "action", "reward", "next_state", "done"
+])
 
 
 class ExperienceMemory:
-    def __init__(self, msize=int(1e5)):
+    def __init__(self, batch_size, msize=int(1e5)):
         self.memory = deque(maxlen=msize)
-        random.seed(78)
+        self.batch_size = batch_size
 
-    def add(self, prev_state, action, reward, state, done):
-        self.memory.append(Experience(prev_state, action, reward, state, done))
+    def add(self, state, action, reward, next_state, done):
+        self.memory.append(Experience(
+            state, action, reward, next_state, done
+        ))
 
-    def sample(self, batch_size=64):
-        if len(self.memory) < batch_size:
+    def sample(self):
+        if len(self.memory) < self.batch_size:
             return None
-        samples = random.sample(self.memory, k=batch_size)
-        return (np.vstack([s.prev_state for s in samples])), \
+        samples = random.sample(self.memory, k=self.batch_size)
+        return (np.vstack([s.state for s in samples])), \
                (np.vstack([s.action for s in samples])), \
                (np.vstack([s.reward for s in samples])), \
-               (np.vstack([s.state for s in samples])), \
+               (np.vstack([s.next_state for s in samples])), \
                (np.vstack([s.done for s in samples]).astype(np.uint8))
+
+    def __len__(self):
+        """Return the current size of internal memory."""
+        return len(self.memory)

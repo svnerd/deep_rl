@@ -24,8 +24,8 @@ env = ReacherEnv(os=args.os, display=args.display)
 dim_tensor_maker = SingleAgentDimTensorMaker(
     batch_size=BATCH_SIZE,
     num_env=env.num_agents,
-    obs_space=env.obs_dim,
-    act_space=env.act_dim
+    state_size=env.obs_dim,
+    act_size=env.act_dim
 )
 
 agent = ReacherAgent(env, dim_tensor_maker, BATCH_SIZE)

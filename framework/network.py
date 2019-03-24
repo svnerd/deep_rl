@@ -79,7 +79,7 @@ def _forward_with_action(layers, x, action):
     cnt = 0
     for layer in layers:
         if cnt == 1:
-            x = torch.cat([x, action], dim=1)
+            x = torch.cat((x, action), dim=1)
         x = F.relu(layer(x))
         cnt += 1
     return x

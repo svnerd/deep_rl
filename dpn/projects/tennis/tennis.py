@@ -19,11 +19,9 @@ dim_maker = MultiAgentDimTensorChecker(
     state_size=env.obs_dim, act_size=env.act_dim
 )
 agent = TennisMultiAgent(env, dim_maker)
-score_tracker = ScoreTracker(good_target=30, window_len=100)
-
 for i in range(0, 5000):                                      # play game for 5 episodes
     states, _, _ = env.reset()
-    #agent.reset()
+    agent.reset()
     scores = np.zeros(env.num_agents)
     while True:
         actions = agent.act_for_env(states)

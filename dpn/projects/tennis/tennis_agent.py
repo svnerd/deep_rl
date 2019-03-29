@@ -15,11 +15,11 @@ BUFFER_SIZE = int(1e5)  # replay buffer size
 DISCOUNT_RATE = 0.99
 TAU = 1e-3              # for soft update of target parameters
 WEIGHT_DECAY = 0.0      # L2 weight decay
-LR_ACTOR = 1e-4         # learning rate of the actor
-LR_CRITIC = 1e-4       # learning rate of the critic
+LR_ACTOR = 4e-4         # learning rate of the actor
+LR_CRITIC = 4e-4       # learning rate of the critic
 
-FC1 = 128
-FC2 = 64
+FC1 = 256
+FC2 = 128
 
 
 class TennisAgent:
@@ -70,7 +70,7 @@ class TennisMultiAgent():
     def __init__(self, env_driver, dim_maker):
         super(TennisMultiAgent, self).__init__()
         self.env_driver = env_driver
-        self.noise = OUNoise((env_driver.num_agents, env_driver.act_dim), seed=RANDOM_SEED)
+        self.noise = OUNoise((env_driver.num_agents, env_driver.act_dim), sigma_decay=0.9995, seed=RANDOM_SEED)
         self.memory = ExperienceMemory(batch_size=BATCH_SIZE, msize=BUFFER_SIZE)
         self.ddpg_agent_list = [TennisAgent(env_driver, dim_maker) for i in range(env_driver.num_agents)]
         self.dim_maker = dim_maker

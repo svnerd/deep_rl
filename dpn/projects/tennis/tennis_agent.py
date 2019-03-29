@@ -1,12 +1,12 @@
 import torch
 import numpy as np
 import torch.nn.functional as F
+import os
 
 from torch import optim
 from deep_rl.util.noise import OUNoise
 from deep_rl.util.replay_buffer import ExperienceMemory
 from deep_rl.network.param import soft_update
-from deep_rl.util.device import to_np
 
 from .model import Actor, Critic
 from .constant import RANDOM_SEED, BATCH_SIZE
@@ -78,12 +78,19 @@ class TennisMultiAgent():
     def reset(self):
         self.noise.reset()
 
+    def save(self, save_dir):
+        os.makedirs(save_dir, exist_ok=True)
+        for i, agent in enumerate(self.ddpg_agent_list):
+            an_filename = os.path.join(save_dir, "agent_actor_{}.pth".format(i))
+            torch.save(agent.actor_local.state_dict(), an_filename)
+            cn_filename = os.path.join(save_dir, "agent_critic_{}.pth".format(i))
+            torch.save(agent.critic_local.state_dict(), cn_filename)
+
     def act_for_env(self, agent_obs):
         env_driver = self.env_driver
         actions = np.zeros((env_driver.num_agents, env_driver.act_dim))
         for i, agent in enumerate(self.ddpg_agent_list):
             obs_t = self.dim_maker.agent_in(agent_obs[i, :].reshape(1, -1))
-
             actions[i, :] = agent.act_for_env(obs_t)
         noise = self.noise.sample()
         actions += noise

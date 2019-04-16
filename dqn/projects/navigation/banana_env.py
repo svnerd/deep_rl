@@ -4,18 +4,26 @@ import numpy as np
 
 
 class BananaEnv:
-    def __init__(self):
-        self.env = UnityEnvironment(
-            file_name="/Users/chenyuan/project/ipython/deep_rl/dqn/projects/navigation/Banana.app")
+    def __init__(self, os='mac', train_mode=True):
+        if os == 'mac':
+            self.env = UnityEnvironment(
+                file_name="/Users/chenyuan/project/ipython/deep_rl/dqn/projects/navigation/Banana.app")
+        elif os == 'linux':
+            self.env = UnityEnvironment(
+                file_name='/home/seiya/projects/reinforce/deep_rl/dqn/projects/navigation/Banana_Linux/Banana.x86_64'
+            )
+        else:
+            raise Exception("bad os")
+        self.train_mode = train_mode
         self.brain_name = self.env.brain_names[0] # 0 is the default brain
         self.brain = self.env.brains[self.brain_name]
         self.act_dim = self.brain.vector_action_space_size
-        info = self.env.reset(train_mode=True)[self.brain_name]
+        info = self.env.reset(train_mode=train_mode)[self.brain_name]
         self.obs_dim = len(info.vector_observations[0]) # current observation
         print("env created with act_dim", self.act_dim, "obs_dim", self.obs_dim)
 
-    def reset(self, train_mode=True):
-        info = self.env.reset(train_mode)[self.brain_name]
+    def reset(self):
+        info = self.env.reset(self.train_mode)[self.brain_name]
         return info.vector_observations[0].reshape(1, -1)
 
     def step(self, action):

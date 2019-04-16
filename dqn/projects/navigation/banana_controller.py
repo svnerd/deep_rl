@@ -1,13 +1,20 @@
 
 from .nav_agent import NavAgent
-from .constant import BATCH_SIZE
+from .constant import BATCH_SIZE, seed_it
+from argparse import ArgumentParser
 
 from deep_rl.dqn.projects.navigation.banana_env import BananaEnv
 from deep_rl.util.score_tracker import ScoreTracker
 from deep_rl.util.dim import SingleAgentDimTensorMaker
+seed_it()
+
 
 if __name__ == '__main__':
-    env = BananaEnv()
+    parser = ArgumentParser()
+    parser.add_argument("--os", default="linux", help="os")
+    parser.add_argument("--display", action="store_true")
+    args = parser.parse_args()
+    env = BananaEnv(os=args.os, train_mode=(not args.display))
     dim_maker = SingleAgentDimTensorMaker(
         batch_size=BATCH_SIZE, num_env=1,
         state_size=env.obs_dim, act_size=env.act_dim

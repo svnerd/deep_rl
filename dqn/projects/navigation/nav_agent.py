@@ -10,7 +10,7 @@ from deep_rl.util.eps_decay import SoftEpsilonDecay
 from deep_rl.util.save_restore import SaveRestoreService
 
 from .constant import RANDOM_SEED, BATCH_SIZE
-
+from .model import NavModel
 BUFFER_SIZE = int(1e5)  # replay buffer size
 NAV_LR = 5e-4
 DISCOUNT_RATE = 0.99
@@ -21,8 +21,8 @@ class NavAgent():
         self.env = env
         self.dim_maker = dim_maker
         self.eps_handler = SoftEpsilonDecay(1.0, 1e-3, 0.995)
-        self.local_network = FCNet(env.obs_dim, env.act_dim, [128, 64], random_seed=RANDOM_SEED)
-        self.target_network = FCNet(env.obs_dim, env.act_dim, [128, 64], random_seed=RANDOM_SEED)
+        self.local_network = NavModel(env.obs_dim, env.act_dim)
+        self.target_network = NavModel(env.obs_dim, env.act_dim)
         self.optimizer = optim.Adam(self.local_network.parameters(), lr=NAV_LR)
         soft_update(target_net=self.target_network, local_net=self.local_network, tau=1.0)
         network_dict = {"local": self.local_network, "target": self.target_network}

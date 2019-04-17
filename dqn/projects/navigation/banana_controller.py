@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument("--record-dir", help="record dir", required=True)
     parser.add_argument("--display", action="store_true")
     args = parser.parse_args()
-    env = BananaEnv(os=args.os, train_mode=(not args.display))
+    env = BananaEnv(os=args.os, display=args.display)
     dim_maker = SingleAgentDimTensorMaker(
         batch_size=BATCH_SIZE, num_env=1,
         state_size=env.obs_dim, act_size=env.act_dim

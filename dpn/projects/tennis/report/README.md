@@ -1,4 +1,4 @@
-  This DQN based agent implemented in Pytorch enables a double-jointed arm to move to target locations.
+  This DQN based agent implemented in Pytorch enables two agents to play tennis. 
 
  You could clone the repo and in its root dir execute
 

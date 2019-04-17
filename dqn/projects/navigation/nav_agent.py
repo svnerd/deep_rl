@@ -5,7 +5,6 @@ import torch.nn.functional as F
 
 from deep_rl.util.replay_buffer import ExperienceMemory
 from deep_rl.network.param import soft_update
-from deep_rl.network.fc_net import FCNet
 from deep_rl.util.eps_decay import SoftEpsilonDecay
 from deep_rl.util.save_restore import SaveRestoreService
 

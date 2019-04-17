@@ -12,7 +12,7 @@ from .constant import seed_it, BATCH_SIZE
 parser = ArgumentParser()
 parser.add_argument("--os", default="linux", help="os")
 parser.add_argument("--display", action="store_true")
-parser.add_argument("--save")
+parser.add_argument("--record-dir")
 args = parser.parse_args()
 
 seed_it()
@@ -22,8 +22,8 @@ dim_maker = MultiAgentDimTensorChecker(
     state_size=env.obs_dim, act_size=env.act_dim
 )
 agent = TennisMultiAgent(env, dim_maker)
-score_tracker = ScoreTracker(good_target=1.0, window_len=100)
-save_dir = args.save
+save_dir = args.record_dir
+score_tracker = ScoreTracker(good_target=1.0, record_dir=save_dir, window_len=100)
 
 for i in range(0, 5000):
     states, _, _ = env.reset()
@@ -44,4 +44,5 @@ for i in range(0, 5000):
     if score_tracker.is_good():
         if save_dir is not None:
             agent.save(save_dir)
+        break
 env.close()

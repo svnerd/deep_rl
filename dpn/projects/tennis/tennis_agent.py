@@ -21,7 +21,6 @@ LR_CRITIC = 4e-4       # learning rate of the critic
 FC1 = 256
 FC2 = 128
 
-
 class TennisAgent:
     def __init__(self, env_driver, dim_maker):
         act_dim = env_driver.act_dim

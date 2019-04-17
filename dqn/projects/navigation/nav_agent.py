@@ -4,10 +4,11 @@ from torch import optim
 import torch.nn.functional as F
 
 from deep_rl.util.replay_buffer import ExperienceMemory
-from deep_rl.util.device import tensor_long
 from deep_rl.network.param import soft_update
 from deep_rl.network.fc_net import FCNet
 from deep_rl.util.eps_decay import SoftEpsilonDecay
+from deep_rl.util.save_restore import SaveRestoreService
+
 from .constant import RANDOM_SEED, BATCH_SIZE
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
@@ -15,7 +16,7 @@ NAV_LR = 5e-4
 DISCOUNT_RATE = 0.99
 
 class NavAgent():
-    def __init__(self, env, dim_maker):
+    def __init__(self, env, dim_maker, record_dir):
         self.memory = ExperienceMemory(batch_size=BATCH_SIZE, msize=BUFFER_SIZE)
         self.env = env
         self.dim_maker = dim_maker
@@ -24,6 +25,9 @@ class NavAgent():
         self.target_network = FCNet(env.obs_dim, env.act_dim, [128, 64], random_seed=RANDOM_SEED)
         self.optimizer = optim.Adam(self.local_network.parameters(), lr=NAV_LR)
         soft_update(target_net=self.target_network, local_net=self.local_network, tau=1.0)
+        network_dict = {"local": self.local_network, "target": self.target_network}
+        self.sr_service = SaveRestoreService(record_dir, network_dict)
+        self.sr_service.restore()
 
     def act(self, obs):
         if random.random() >= self.eps_handler.eps:
@@ -35,9 +39,9 @@ class NavAgent():
         action = np.reshape(action, (-1, 1))
         return action
 
-    def update(self, states, actions, rewards, next_states, dones):
+    def update(self, state, action, reward, next_state, done, episode):
         self.eps_handler.decay()
-        self.memory.add(states, actions, rewards, next_states, dones)
+        self.memory.add(state, action, reward, next_state, done)
         if len(self.memory) < BATCH_SIZE:
             return
         b_states_t, b_actions_t, b_rewards_t, b_next_states_t, b_dones_t = self.memory.sample(self.dim_maker)
@@ -51,4 +55,6 @@ class NavAgent():
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
+        soft_update(target_net=self.target_network, local_net=self.local_network, tau=0.1)
+        if done and episode % 20 == 0:
+            self.sr_service.save()

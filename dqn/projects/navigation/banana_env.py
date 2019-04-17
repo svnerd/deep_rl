@@ -7,7 +7,9 @@ class BananaEnv:
     def __init__(self, os='mac', train_mode=True):
         if os == 'mac':
             self.env = UnityEnvironment(
-                file_name="/Users/chenyuan/project/ipython/deep_rl/dqn/projects/navigation/Banana.app")
+                file_name="/Users/chenyuan/project/ipython/deep_rl/dqn/projects/navigation/Banana.app",
+                no_graphics=True
+            )
         elif os == 'linux':
             self.env = UnityEnvironment(
                 file_name='/home/seiya/projects/reinforce/deep_rl/dqn/projects/navigation/Banana_Linux/Banana.x86_64'

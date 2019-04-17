@@ -27,18 +27,19 @@ class SingleAgentDimTensorMaker:
     def env_in(self, act_t):
         act = to_np(act_t)
         assert act.shape[0] == self.num_env
-        assert act.shape[1] == self.act_size
+        assert act.shape[1] == self.act_size or act.shape[1] == 1 # for categorical actions
         return act
 
     def rewards_dones_to_tensor(self, rd):
         rd_t = tensor_float(rd)
         assert rd_t.shape[0] == self.num_env or rd_t.shape[0] == self.batch_size
+        assert rd_t.shape[1] == 1
         return rd_t
 
     def actions_to_tensor(self, rd):
         rd_t = tensor_float(rd)
         assert rd_t.shape[0] == self.num_env or rd_t.shape[0] == self.batch_size
-        assert rd_t.shape[1] == self.act_size
+        assert rd_t.shape[1] == self.act_size or rd_t.shape[1] == 1 # for discrete action
         return rd_t
 
     def check_env_out(self, obs, rewards, dones):
@@ -58,6 +59,11 @@ class SingleAgentDimTensorMaker:
         assert isinstance(t, torch.Tensor)
         assert t.shape[0] == self.num_env or t.shape[0] == self.batch_size
         assert t.shape[1] == self.act_size or t.shape[1] == 1 # for actor/critic
+
+    def check_loss(self, loss):
+        assert isinstance(loss, torch.Tensor)
+        assert loss.shape[0] == self.num_env or loss.shape[0] == self.batch_size or loss.shape[0] == 1
+        assert loss.shape[1] == 1
 
     def agent_out_to_np(self, t):
         return to_np(t)
@@ -87,7 +93,7 @@ class MultiAgentDimTensorChecker:
     def actions_to_tensor(self, rd):
         rd_t = tensor_float(rd)
         assert rd_t.shape[0] == self.num_env or rd_t.shape[0] == self.batch_size
-        assert rd_t.shape[1] == self.act_size
+        assert rd_t.shape[1] == self.act_size or rd_t.shape[1] == 1 # for discrete action
         return rd_t
 
     def check_env_out(self, obs, rewards, dones):

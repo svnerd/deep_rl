@@ -15,9 +15,8 @@ seed_it()
 parser = ArgumentParser()
 parser.add_argument("--os", default="linux", help="os")
 parser.add_argument("--display", action="store_true")
-parser.add_argument("--good", action="store_true")
+parser.add_argument("--record-dir", help="record dir", required=True)
 args = parser.parse_args()
-
 
 env = ReacherEnv(os=args.os, display=args.display)
 dim_tensor_maker = SingleAgentDimTensorMaker(
@@ -27,9 +26,9 @@ dim_tensor_maker = SingleAgentDimTensorMaker(
     act_size=env.act_dim
 )
 
-agent = ReacherAgent(env, dim_tensor_maker, BATCH_SIZE)
+agent = ReacherAgent(env, dim_tensor_maker, BATCH_SIZE, args.record_dir)
 
-score_tracker = ScoreTracker(good_target=30, window_len=100)
+score_tracker = ScoreTracker(good_target=30, record_dir=args.record_dir, window_len=100)
 for e in range(200):
     states, r, dones = env.reset()
     scores = np.zeros(env.num_agents)
@@ -40,7 +39,7 @@ for e in range(200):
         dim_tensor_maker.check_env_out(
             next_states, rewards, dones
         )
-        agent.update(states, actions, next_states, rewards, dones)
+        agent.update(states, actions, next_states, rewards, dones, e)
         scores += rewards                         # update the score (for each agent)
         states = next_states                               # roll over states to next time step
         if np.any(dones):                                  # exit loop if episode finished

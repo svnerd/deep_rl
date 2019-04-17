@@ -7,6 +7,7 @@ from deep_rl.dpn.projects.reacher.model import Actor, Critic
 from deep_rl.network.param import soft_update
 from deep_rl.util.noise import OUNoise
 from deep_rl.util.replay_buffer import ExperienceMemory
+from deep_rl.util.save_restore import SaveRestoreService
 
 from .constant import RANDOM_SEED, BATCH_SIZE
 
@@ -35,7 +36,7 @@ def _make_actor_critic_net(env):
 
 
 class ReacherAgent:
-    def __init__(self, reacher_env, dim_tensor_maker, batch_size):
+    def __init__(self, reacher_env, dim_tensor_maker, batch_size, record_dir):
         self.actor_net, self.critic_net = _make_actor_critic_net(reacher_env)
         self.actor_target, self.critic_target = _make_actor_critic_net(reacher_env)
         #soft_update(self.actor_target, self.actor_net)
@@ -47,8 +48,16 @@ class ReacherAgent:
         self.critic_optimizer = torch.optim.Adam(params=self.critic_net.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
         self.actor_optimizer = torch.optim.Adam(params=self.actor_net.parameters(), lr=LR_ACTOR)
         self.noise = OUNoise((reacher_env.num_agents, reacher_env.act_dim), seed=RANDOM_SEED)
-        #self.memory = ReplayBuffer(reacher_env.act_dim, BUFFER_SIZE, batch_size)
         self.memory = ExperienceMemory(batch_size=batch_size, msize=BUFFER_SIZE)
+
+        network_dict = {
+            "actor_net": self.actor_net,
+            "actor_target": self.actor_target,
+            "critic_net": self.critic_net,
+            "critic_target": self.critic_target,
+        }
+        self.sr_service = SaveRestoreService(record_dir, network_dict)
+        self.sr_service.restore()
 
     def act(self, obs):
         num_agents = self.env.num_agents
@@ -99,7 +108,9 @@ class ReacherAgent:
         soft_update(self.actor_target, self.actor_net, tau=TAU)
         soft_update(self.critic_target, self.critic_net, tau=TAU)
 
-    def update(self, states, actions, next_states, rewards, dones):
+    def update(self, states, actions, next_states, rewards, dones, episode):
         for agent in range(self.env.num_agents):
             self.memory.add(states[agent,:], actions[agent,:], rewards[agent], next_states[agent,:], dones[agent])
         self.__learn()
+        if np.any(dones) and episode % 20 == 0:
+            self.sr_service.save()

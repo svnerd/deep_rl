@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 
 from deep_rl.util.score_tracker import ScoreTracker
 from deep_rl.util.dim import SingleAgentDimTensorMaker
-import numpy as np
 seed_it()
 
 

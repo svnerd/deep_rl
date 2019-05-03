@@ -1,6 +1,6 @@
 from torch import nn
 import torch.nn.functional as F
-import torch
+from deep_rl.util.device import DEVICE
 
 def inception_k5():
     conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5)
@@ -27,6 +27,7 @@ class SimpleCNN(nn.Module):
         self.conv1, self.pool, self.conv2 = inception_k5()
         self.fc1 = nn.Linear(3*26*26, 16*16)
         self.fc2 = nn.Linear(16*16, action_size)
+        self.to(DEVICE)
 
     def forward(self, images):
         o5 = forward(self.conv1, self.pool, self.conv2, images)

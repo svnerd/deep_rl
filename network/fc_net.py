@@ -51,7 +51,6 @@ def _fc_net_forward(input_layer, hidden_layers, output_layer, input,
         x = F.relu(layer(x))
     return output_func(output_layer(x))
 
-
 class FCNet(nn.Module):
     def __init__(self, input_size, output_size, hidden_sizes, random_seed,
                  output_func=_dummy_func):
@@ -71,7 +70,8 @@ class FCNet(nn.Module):
         x = F.relu(self.input_layer(state))
         for layer in self.hidden_layers:
             x = F.relu(layer(x))
-        return self.output_func(self.output_layer(x))
+        x = self.output_layer(x)
+        return self.output_func(x)
 
 
 class FCNetInjectX(nn.Module):

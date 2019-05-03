@@ -9,7 +9,6 @@ import torch
 class CategoricalActorCritic(nn.Module):
     def __init__(self, state_size, action_size, shared_feature_size, fc_units):
         super(CategoricalActorCritic, self).__init__()
-
         self.shared_net = FCNet(
             input_size=state_size,
             output_size=shared_feature_size,
@@ -22,10 +21,18 @@ class CategoricalActorCritic(nn.Module):
 
     def forward(self, states):
         features = self.shared_net.forward(states)
-        actions, log_prob = self.actor.forward(features=features)
+        entropy, actions, log_prob = self.actor.forward(features=features)
         critic_v = self.critic.forward(features)
-        return actions, log_prob, critic_v
+        return entropy, actions, log_prob, critic_v
 
+class DummyNet(nn.Module):
+    def __init__(self, state_size):
+        super(DummyNet, self).__init__()
+        #self.fc1 = nn.Linear(state_size, state_size)
+
+    def forward(self, state):
+        return state
+        #return self.fc1.forward(state)
 
 class Actor(nn.Module):
     def __init__(self, state_size, action_size, fc1_units=64, fc2_units=32):
@@ -42,8 +49,8 @@ class Actor(nn.Module):
         dist = torch.distributions.Categorical(logits=logits)
         action = dist.sample() # action.shape = (N)
         log_prob = dist.log_prob(action) # log_prob.shape = (N)
-        #entropy = dist.entropy().sum(-1).unsqueeze(-1)
-        return action.unsqueeze(-1), log_prob.unsqueeze(-1)
+        entropy = dist.entropy().sum(-1).unsqueeze(-1)
+        return entropy, action.unsqueeze(-1), log_prob.unsqueeze(-1)
 
 class Critic(nn.Module):
     def __init__(self, state_size, fc1_units=64, fc2_units=32):

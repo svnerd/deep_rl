@@ -4,10 +4,9 @@ from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
 import numpy as np
 import torch, cv2
-import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
-
+from deep_rl.util.device import DEVICE
 
 
 class MarioEnv:
@@ -43,6 +42,7 @@ class MarioEnv:
         state_new = cv2.resize(state, (64,64))
         img = Image.fromarray(state_new)
         state_t = self.transform(img)
+        state_t.to(DEVICE)
         return state_t.unsqueeze(0)
 
     def render(self):

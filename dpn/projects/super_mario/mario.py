@@ -1,8 +1,8 @@
-from .mario_env import MarioEnv
-from .q_agent_mario import MarioAgent
-from .constant import BATCH_SIZE, seed_it
+from deep_rl.dpn.projects.super_mario.mario_env import MarioEnv
+from deep_rl.dpn.projects.super_mario.q_agent_mario import MarioAgent
+from deep_rl.dpn.projects.super_mario.constant import BATCH_SIZE, seed_it
 from argparse import ArgumentParser
-
+import time
 from deep_rl.util.score_tracker import ScoreTracker
 from deep_rl.util.dim import SingleAgentDimTensorMaker
 seed_it()
@@ -27,10 +27,11 @@ if __name__ == '__main__':
     while True:
         action = agent.act(state_t)
         next_state_t, reward, done = env.step(action)
+        score_per_episode += reward[0]
         if (reward[0] < -10):
             print("died. make it more painful")
-            reward[0] = -100
-        score_per_episode += reward[0]
+            print(score_per_episode)
+
         agent.update(state_t.squeeze(0), action.reshape(-1), reward, next_state_t.squeeze(0), done, episode)
         if done:
             score_tracker.score_tracking(episode, score_per_episode)
@@ -42,4 +43,3 @@ if __name__ == '__main__':
             break
         env.render()
     env.close()
-

@@ -3,7 +3,7 @@ import gym_super_mario_bros
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
 import numpy as np
-import torch, cv2
+import torch, cv2, time
 import torchvision.transforms as transforms
 from PIL import Image
 from deep_rl.util.device import DEVICE
@@ -18,7 +18,7 @@ class MarioEnv:
         else:
             raise Exception("bad os")
         self.act_dim = self.env.action_space.n
-        self.obs_dim = (3, 64, 64)
+        self.obs_dim = (1, 64, 64)
         print("env created with act_dim", self.act_dim, "obs_dim", self.obs_dim)
         self.transform = transforms.Compose(
             [transforms.ToTensor(), # chain 2 transforms together using list.
@@ -29,7 +29,9 @@ class MarioEnv:
         return self.__resize_image(state)
 
     def step(self, action):
-        state, reward, done, _ = self.env.step(action)
+        state, reward, done, info = self.env.step(action)
+        if reward == 0:
+            reward = -0.5
         state_t = self.__resize_image(state)
         return state_t, \
                np.reshape(reward, -1), \
@@ -41,8 +43,8 @@ class MarioEnv:
     def __resize_image(self, state):
         state_new = cv2.resize(state, (64,64))
         img = Image.fromarray(state_new)
-        state_t = self.transform(img)
-        state_t.to(DEVICE)
+        state_t = self.transform(img)[0,:,:].unsqueeze(0)
+        state_t.float().to(DEVICE)
         return state_t.unsqueeze(0)
 
     def render(self):

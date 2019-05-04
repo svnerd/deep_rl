@@ -40,14 +40,17 @@ class MarioAgent():
 
     def update(self, state, action, reward, next_state, done, episode):
         self.eps_handler.decay()
-        self.memory.add(state, action, reward, next_state, done)
+        if (reward[0] < -1):
+            for i in range(-int(reward[0])):
+                self.memory.add(state, action, reward, next_state, done)
+        else:
+            self.memory.add(state, action, reward, next_state, done)
         if len(self.memory) < BATCH_SIZE:
             return
         b_states_t, b_actions_t, b_rewards_t, b_next_states_t, b_dones_t = self.memory.sample(self.dim_maker)
         vnext_target_t = self.target_network.forward(b_next_states_t)
         max_vnext_target_t = vnext_target_t.max(1)[0].reshape(-1, 1)
         vtarget_t = b_rewards_t + DISCOUNT_RATE * (1-b_dones_t) * max_vnext_target_t
-
         vlocal_t = self.local_network.forward(b_states_t)
         vlocal_t = vlocal_t.gather(1, (b_actions_t.long()))
         loss = F.mse_loss(vlocal_t, vtarget_t.detach())

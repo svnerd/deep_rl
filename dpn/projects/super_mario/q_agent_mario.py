@@ -58,5 +58,5 @@ class MarioAgent():
         loss.backward()
         self.optimizer.step()
         soft_update(target_net=self.target_network, local_net=self.local_network, tau=0.1)
-        if done and episode % 20 == 0:
+        if done and episode % 5 == 0:
             self.sr_service.save()

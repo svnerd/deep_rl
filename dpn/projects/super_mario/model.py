@@ -34,11 +34,11 @@ class SimpleCNN(nn.Module):
         self.to(DEVICE)
 
     def forward(self, images):
-        t = self.conv1.forward(images)
+        t = F.relu(self.conv1.forward(images))
         t = self.pool.forward(t)
-        t = self.conv2.forward(t)
+        t = F.relu(self.conv2.forward(t))
         t = self.pool2.forward(t)
-        t = self.conv3.forward(t)
+        t = F.relu(self.conv3.forward(t))
         t = t.reshape(-1, 1*53*53)
         t = self.fc1.forward(t)
         t = F.relu(t)

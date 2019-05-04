@@ -44,7 +44,7 @@ class MarioEnv:
         state_new = cv2.resize(state, (64,64))
         img = Image.fromarray(state_new)
         state_t = self.transform(img)[0,:,:].unsqueeze(0)
-        state_t.float().to(DEVICE)
+        state_t = state_t.float().to(DEVICE)
         return state_t.unsqueeze(0)
 
     def render(self):

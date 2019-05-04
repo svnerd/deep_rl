@@ -17,6 +17,7 @@ class SaveRestoreService():
         self.step_id = 0
         self.model_file_dict = None
         self.network_dict = network_dict
+        record_dir = os.path.abspath(record_dir)
         if os.path.exists(record_dir):
             max_step_id = -1
             network_list = list(network_dict.keys())
@@ -25,7 +26,7 @@ class SaveRestoreService():
                     step_id = int(f.split("-")[1])
                     if step_id > max_step_id:
                         max_step_id = step_id
-            if self.step_id < max_step_id:
+            if self.step_id <= max_step_id:
                 self.step_id = max_step_id
                 self.model_file_dict = _make_model_file_dict(record_dir, max_step_id, network_list)
         else:
@@ -35,6 +36,7 @@ class SaveRestoreService():
     def restore(self):
         if self.do_nothing or self.model_file_dict is None:
             return
+        print("restored from", self.model_file_dict)
         for k, network in self.network_dict.items():
             network.load_state_dict(torch.load(self.model_file_dict[k]))
 

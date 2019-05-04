@@ -18,7 +18,7 @@ class MarioEnv:
         else:
             raise Exception("bad os")
         self.act_dim = self.env.action_space.n
-        self.obs_dim = (1, 64, 64)
+        self.obs_dim = (1, 128, 128)
         print("env created with act_dim", self.act_dim, "obs_dim", self.obs_dim)
         self.transform = transforms.Compose(
             [transforms.ToTensor(), # chain 2 transforms together using list.
@@ -41,7 +41,7 @@ class MarioEnv:
         self.env.close()
 
     def __resize_image(self, state):
-        state_new = cv2.resize(state, (64,64))
+        state_new = cv2.resize(state, (128, 128))
         img = Image.fromarray(state_new)
         state_t = self.transform(img)[0,:,:].unsqueeze(0)
         state_t = state_t.float().to(DEVICE)

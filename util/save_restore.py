@@ -40,10 +40,19 @@ class SaveRestoreService():
         for k, network in self.network_dict.items():
             network.load_state_dict(torch.load(self.model_file_dict[k]))
 
-    def save(self):
+    def save(self, space_saving=True):
         if self.do_nothing:
             return
         self.model_file_dict = _make_model_file_dict(self.record_dir, self.step_id, self.network_dict.keys())
         for k, network in self.network_dict.items():
             torch.save(network.state_dict(), self.model_file_dict[k])
+        if space_saving:
+            for f in os.listdir(self.record_dir):
+                parts = f.split("-")
+                if len(parts) >= 2:
+                    step_id = int(f.split("-")[1])
+                    if step_id < self.step_id:
+                        remove_filen = os.path.join(self.record_dir, f)
+                        print("cleaning up", remove_filen)
+                        os.remove(remove_filen)
         self.step_id += 1
